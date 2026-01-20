@@ -1,0 +1,97 @@
+---
+/**
+ * index.astro - 三端博客中控页面
+ * 2026年 仿苹果系统 UI 博客
+ */
+
+import { getCollection } from 'astro:content';
+
+// 导入三个终端的独立组件
+import MacView from '../components/MacView.astro';
+import IpadView from '../components/IpadView.astro';
+import IphoneView from '../components/IphoneView.astro';
+// 1. 获取内容：从 src/content/blog 读取所有 Markdown 文件
+const allPosts = await getCollection('blog');
+
+// --- 新增这一行：提取分类 ---
+const categories = [...new Set(allPosts.map(post => post.data.category || '未分类'))];
+
+// 2. 预处理数据：按日期倒序排列，并映射成组件需要的格式
+const posts = allPosts
+  .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime())
+  .map(post => ({
+    id: post.slug,           // 使用文件名作为唯一 ID，解决 ID 冲突
+    data: post.data,         // 包含 title, date, description
+    body: post.body,         // 原始内容（预留给以后全文渲染）
+    slug: post.slug
+  }));
+
+// 页面标题
+const pageTitle = "My OS Blog - 2026";
+---
+
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{pageTitle}</title>
+    
+    <style is:global>
+      /* 全局 CSS 重置：确保三端背景不留白，不滚动 */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden; /* 禁止浏览器原生滚动条，模拟原生 App 感 */
+        background-color: #000; /* 背景黑屏，防止切换时闪白 */
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+
+      /* 视图容器：默认全部隐藏 */
+      .os-view {
+        display: none;
+        width: 100vw;
+        height: 100vh;
+      }
+
+      /* --- 响应式核心逻辑 --- */
+
+      /* 1. 移动端 (iPhone)：小于 768px */
+      @media (max-width: 767px) {
+        #iphone-view { display: block; }
+      }
+
+      /* 2. 平板端 (iPad)：768px 到 1023px */
+      @media (min-width: 768px) and (max-width: 1024px) {
+        #ipad-view { display: block; }
+      }
+
+      /* 3. 电脑端 (Mac)：大于 1024px */
+      @media (min-width: 1025px) {
+        #mac-view { display: block; }
+      }
+    </style>
+  </head>
+  <body>
+
+    <div id="iphone-view" class="os-view">
+      <IphoneView posts={posts} />
+    </div>
+
+    <div id="ipad-view" class="os-view">
+      <IpadView posts={posts} />
+    </div>
+
+    <div id="mac-view" class="os-view">
+  <MacView posts={posts} categories={categories} />
+</div>
+
+  </body>
+</html>

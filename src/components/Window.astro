@@ -1,0 +1,55 @@
+---
+// Window.astro - 万能壳子组件
+const { id, title, emoji = "📂" } = Astro.props;
+---
+
+<div class="window-overlay" id={id} style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000;">
+  <div class="app-window" onmousedown="bringToFront(this.parentElement)" style="position: absolute; pointer-events: auto;">
+    
+    <div class="window-header drag-handle">
+      <div class="window-controls">
+        <span class="dot red" onclick={`closeWin('${id}')`}></span>
+        <span class="dot yellow" onclick={`minWin('${id}', '${emoji}')`}></span>
+        <span class="dot green" onclick="toggleFull(this)"></span>
+      </div>
+      <div class="window-title">{title}</div>
+      
+      <slot name="header-right" />
+    </div>
+
+    <div class="window-body">
+      <slot /> </div>
+
+  </div>
+</div>
+
+<style>
+  .app-window {
+    width: 800px;
+    height: 500px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  .window-header {
+    height: 40px;
+    background: rgba(235, 235, 235, 0.8);
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    position: relative;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+  }
+  .window-controls { display: flex; gap: 8px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
+  .red { background: #ff5f56; }
+  .yellow { background: #ffbd2e; }
+  .green { background: #27c93f; }
+  .window-title { flex: 1; text-align: center; font-size: 13px; font-weight: 600; color: #444; }
+  .window-body { flex: 1; overflow: auto; display: flex; }
+</style>

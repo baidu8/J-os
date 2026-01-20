@@ -1,0 +1,127 @@
+---
+const { posts } = Astro.props;
+---
+
+<div class="view-ipad">
+  <div class="ipad-statusbar">中国移动
+    <div id="ipad-clock-val"></div>
+    <div class="ipad-status-icons">📶 Wi-Fi 🔋 100%</div>
+  </div>
+
+  <div class="ipad-container">
+    <div class="ipad-sidebar">
+      <div class="sidebar-header">
+        <h1>文库</h1>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-item active">📂 所有博文</div>
+        <div class="nav-item">⭐ 收藏</div>
+      </nav>
+    </div>
+
+    <div class="ipad-main-content">
+      <div class="ipad-grid">
+        {posts.map(post => (
+          <div class="ipad-app-unit" onclick={`openIpadWin('ipad-post-${post.id}')`}>
+            <div class="ipad-app-icon">📘</div>
+            <div class="ipad-app-label">{post.data.title}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  {posts.map(post => (
+    <div class="ipad-overlay" id={`ipad-post-${post.id}`}>
+      <div class="ipad-window">
+        <div class="ipad-window-header">
+          <button class="ipad-close-btn" onclick={`closeIpadWin('ipad-post-${post.id}')`}>完成</button>
+          <div class="ipad-window-title">文章详情</div>
+          <div style="width:60px"></div>
+        </div>
+        <div class="ipad-window-body">
+          <h1 style="font-size:32px; margin-bottom:10px;">{post.data.title}</h1>
+          <p style="color:#666; margin-bottom:20px;">{post.data.date}</p>
+          <div style="line-height:1.6; font-size:18px; color:#333;">{post.data.description}</div>
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
+
+<style>
+  /* 全局锁死 iPad 视图背景 */
+  .view-ipad {
+    height: 100vh; width: 100vw; overflow: hidden;
+    background: url('https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2000') center/cover !important;
+    position: relative; font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  .ipad-statusbar { height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; color: white; font-weight: 600; }
+
+  /* 主容器：去掉白色底色，去掉毛玻璃 */
+  .ipad-container {
+    display: flex; height: calc(100% - 60px); margin: 0 20px 20px;
+    background: transparent; /* 关键：变成透明 */
+    border-radius: 20px; overflow: hidden;
+  }
+
+  /* 侧边栏：给一点浅色半透明，区分功能区 */
+  .ipad-sidebar { 
+    width: 280px; 
+    background: rgba(255, 255, 255, 0.85); /* 稍微厚一点的白色，但不模糊 */
+    padding: 20px; 
+  }
+  .sidebar-header h1 { font-size: 32px; margin: 10px 0 30px; color: #000; }
+  .nav-item { padding: 12px 15px; border-radius: 10px; margin-bottom: 8px; color: #333; font-size: 18px; }
+  .nav-item.active { background: #e5e5ea; color: #007aff; font-weight: 600; }
+
+  /* 内容区 */
+  .ipad-main-content { flex: 1; padding: 40px; overflow-y: auto; }
+  .ipad-grid { display: grid; grid-template-columns: repeat(auto-fill, 120px); gap: 40px; }
+  .ipad-app-unit { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+  .ipad-app-icon { width: 90px; height: 90px; background: white; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 45px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); }
+  .ipad-app-label { margin-top: 12px; font-size: 15px; color: white; text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+
+  /* 弹窗：去掉背景模糊 */
+  .ipad-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    display: none; justify-content: center; align-items: center;
+    background: rgba(0,0,0,0.4); z-index: 2000;
+  }
+  .ipad-overlay.active { display: flex; }
+  .ipad-window { width: 80%; height: 85%; background: white; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; }
+  .ipad-window-header { height: 60px; border-bottom: 1px solid #eee; display: flex; align-items: center; padding: 0 20px; }
+  .ipad-close-btn { color: #007aff; border: none; background: none; font-size: 18px; cursor: pointer; }
+  .ipad-window-title { flex: 1; text-align: center; font-weight: 600; }
+  .ipad-window-body { flex: 1; padding: 40px; overflow-y: auto; }
+</style>
+
+<script is:inline>
+  function openIpadWin(id) {
+    const el = document.getElementById(id);
+    if(el) {
+      el.style.display = 'flex'; // 先显示
+      setTimeout(() => el.classList.add('active'), 10); // 再做动画
+    }
+  }
+
+  function closeIpadWin(id) {
+    const el = document.getElementById(id);
+    if(el) {
+      el.classList.remove('active');
+      setTimeout(() => el.style.display = 'none', 300); // 动画完再隐藏
+    }
+  }
+
+  // 更新时间
+  function updateIpadTime() {
+    const clock = document.getElementById('ipad-clock-val');
+    if(clock) {
+      const now = new Date();
+      clock.innerText = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    }
+  }
+  setInterval(updateIpadTime, 1000);
+  updateIpadTime();
+</script>

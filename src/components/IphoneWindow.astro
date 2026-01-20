@@ -1,0 +1,101 @@
+---
+// IphoneWindow.astro
+const { id, title = "正文" } = Astro.props;
+---
+
+<div class="iphone-window-overlay" id={id}>
+  <div class="iphone-full-page">
+    <div class="iphone-page-header">
+      <button onclick={`closeIphoneWin('${id}')`}>〈 返回</button>
+      <div class="iphone-title">{title}</div>
+      <div style="width: 50px;"></div> </div>
+    
+    <div class="iphone-page-body">
+      <slot />
+    </div>
+  </div>
+</div>
+
+<style>
+.iphone-page-header {
+    padding-top: 44px; /* 避开状态栏 */
+    height: 94px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-inline: 15px; /* 左右内边距 */
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 0.5px solid rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  /* 重新定义消失的返回按钮样式 */
+  .iphone-page-header button {
+    background: none;
+    border: none;
+    color: #007aff; /* iOS 经典蓝色 */
+    font-size: 17px;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    font-weight: 400;
+  }
+
+  .iphone-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #000;
+    /* 确保标题绝对居中 */
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 12px;
+  }
+
+  .iphone-window-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    display: none; z-index: 5000;
+  }
+  .iphone-window-overlay.active { display: block; }
+  .iphone-full-page { width: 100%; height: 100%; background: #f2f2f7; display: flex; flex-direction: column; }
+  .iphone-page-body { flex: 1; overflow-y: auto; }
+  .iphone-window-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: none; /* 默认隐藏 */
+    z-index: 5000;
+  }
+
+  .iphone-window-overlay.active {
+    display: block;
+  }
+
+  .iphone-full-page {
+    width: 100%;
+    height: 100%;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    /* 苹果标志性的滑入动画 */
+    animation: iphoneSlideUp 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  @keyframes iphoneSlideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .iphone-page-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* 顺滑滚动 */
+  }
+</style>

@@ -1,0 +1,41 @@
+---
+import { getCollection } from 'astro:content';
+
+// 1. 告诉 Astro 所有的文章路径
+export async function getStaticPaths() {
+  const blogEntries = await getCollection('blog');
+  return blogEntries.map(entry => ({
+    params: { slug: entry.id }, props: { entry },
+  }));
+}
+
+// 2. 获取当前页面的文章数据
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+---
+
+<html lang="zh-cn">
+  <head>
+    <meta charset="utf-8" />
+    <title>{entry.data.title}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+  </head>
+  <body class="bg-white text-gray-800 leading-relaxed">
+    <article class="max-w-2xl mx-auto py-20 px-4">
+      <a href="/" class="text-indigo-600 hover:underline mb-8 inline-block">← 返回首页</a>
+      
+      <header class="mb-10">
+        <h1 class="text-4xl font-black mb-2">{entry.data.title}</h1>
+        <p class="text-gray-400 font-mono">{entry.data.date}</p>
+      </header>
+
+      <div class="prose prose-slate lg:prose-xl max-w-none 
+            prose-headings:text-indigo-600 
+            prose-a:text-pink-500 
+            prose-img:rounded-2xl">
+          <Content /> 
+      </div>
+    </article>
+  </body>
+</html>

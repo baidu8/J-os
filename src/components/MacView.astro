@@ -1,0 +1,564 @@
+---
+const { posts, categories = [] } = Astro.props;
+import Window from './Window.astro';
+---
+
+<div class="view-mac">
+  <div class="mac-menubar">
+    <div class="menu-left"><b></b> <span onclick="openWin('mac-finder')">访达</span> 文件 编辑 显示 前往 窗口 帮助</div>
+    <div id="mac-clock"></div>
+  </div>
+
+  <div class="desktop-icons">
+    <div class="icon-unit drag-handle" onclick="openWin('mac-finder')">
+      <div class="folder-icon">📂</div>
+      <span class="icon-label">博文</span>
+    </div>
+  </div>
+
+  <Window id="mac-finder" title="访达" emoji="📂">
+    <div slot="header-right" style="position: absolute; right: 15px;">
+      <input type="text" id="finder-search" placeholder="搜索文章..." oninput="filterPosts()" onmousedown="event.stopPropagation()" style="font-size: 12px; padding: 4px 8px; border-radius: 4px; border: 1px solid #ddd; outline: none; cursor: text;" />
+    </div>
+
+    <div class="finder-layout" style="display: flex; height: 100%; width: 100%;">
+      <div class="sidebar" style="width: 160px; border-right: 1px solid rgba(0,0,0,0.1); padding: 10px; flex-shrink: 0;">
+        <div class="sidebar-item active" onclick="filterByCategory('all', this)">📄 全部文章</div>
+        {categories.map(cat => (
+          <div class="sidebar-item" onclick={`filterByCategory('${cat}', this)`}>📁 {cat}</div>
+        ))}
+      </div>
+      
+      <div class="content-grid" id="finder-items" style="flex: 1; padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 15px; overflow-y: auto; align-content: start;">
+        {posts.map(post => (
+          <div class="grid-item post-item" onclick={`openWin('post-${post.id}')`}>
+            <div class="file-icon" style="font-size: 40px;">📄</div>
+            <div class="file-name" style="font-size: 12px; margin-top: 5px;">{post.data.title}</div>
+            <div class="file-category" style="display:none">{post.data.category}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </Window>
+
+  <Window id="mac-safari" title="浏览器" emoji="🧭">
+    <div style="padding: 40px; text-align: center; width: 100%;">
+      <h2>模拟浏览器窗口</h2>
+      <p>这里可以放你的个人介绍或者其他项目。</p>
+    </div>
+  </Window>
+
+  <Window id="mac-message" title="标签" emoji="🧭">
+    <div style="padding: 40px; text-align: center; width: 100%;">
+      <h2>模拟浏览器窗口</h2>
+      <img src="https://4kwallpapers.com/images/walls/thumbs_3t/6420.jpg"/>
+    </div>
+  </Window>
+
+  {posts.map(post => (
+    <Window id={`post-${post.id}`} title="文章预览" emoji="📄">
+      <div class="post-content" style="padding: 20px; width: 100%; overflow-y: auto;">
+        <h1 style="margin-top: 0;">{post.data.title}</h1>
+        <p class="post-date" style="color: #666; font-size: 14px;">{post.data.date}</p>
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;" />
+        <div class="text" style="line-height: 1.6;">{post.data.description}</div>
+      </div>
+    </Window>
+  ))}
+
+  <div class="mac-dock-container">
+    <div class="mac-dock">
+      <div class="dock-item" onclick="openWin('mac-finder')">📂</div>
+      <div class="dock-item" onclick="openWin('mac-safari')">🧭</div>
+      <div class="dock-item" onclick="openWin('mac-message')">💬</div>
+      <div id="dock-divider" class="dock-divider"></div>
+      <div id="min-zone" class="min-zone"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* 使用 :global 确保样式能穿透组件隔离 */
+  :global(.window-body::-webkit-scrollbar),
+  :global(.sidebar::-webkit-scrollbar),
+  :global(.content-grid::-webkit-scrollbar) {
+    width: 6px !important;  /* 调细一点更像 Mac */
+    height: 6px !important;
+  }
+
+  :global(.window-body::-webkit-scrollbar-track) {
+    background: transparent !important;
+  }
+
+  :global(.window-body::-webkit-scrollbar-thumb) {
+    background-color: rgba(0, 0, 0, 0.2) !important; /* 半透明灰色 */
+    border-radius: 10px !important;
+    border: 1px solid transparent !important;
+    background-clip: content-box !important;
+  }
+
+  :global(.window-body::-webkit-scrollbar-thumb:hover) {
+    background-color: rgba(0, 0, 0, 0.4) !important; /* 鼠标悬浮时加深 */
+  }
+img {
+  max-width: 100%; /* 图片永远不会超过窗口宽度 */
+  height: auto;
+}
+/* 让图标划过时变大 */
+.dock-item {
+  font-size: 28px; /* 调大 Emoji 大小 */
+  cursor: pointer !important;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); /* 带有弹性的放大 */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dock-item:hover {
+  transform: scale(1.3) translateY(-10px); /* 向上浮动并放大 */
+}
+
+/* 正在运行的小圆点指示灯 */
+.dock-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  width: 4px;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.6); /* 黑色小圆点 */
+  border-radius: 50%;
+}
+/* 找一下你的桌面最外层 div 的类名，比如 .os-container 或 .desktop */
+.os-container {
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none;      /* IE */
+  user-select: none;          /* 标准 */
+}
+
+/* 唯独允许博文窗口里的正文可以被选中（方便以后复制文字） */
+.post-window-content {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+/* 给所有可点击的项目统一加小手 */
+
+/* 1. 顶栏的菜单项 */
+.menu-item, .clock {
+  cursor: pointer;
+}
+
+/* 2. Dock 栏的图标 */
+.dock-item {
+  cursor: pointer;
+}
+/* 1. 确保文章图标整体和内部所有东西（图标、文字）都是小手 */
+.post-item, 
+.post-item * { 
+  cursor: pointer !important; 
+}
+
+/* 2. 确保侧边栏分类也是小手 */
+.sidebar-item, 
+.sidebar-item * {
+  cursor: pointer !important;
+}
+
+/* 3. 顶栏菜单 */
+.menu-item {
+  cursor: pointer !important;
+}
+
+/* 4. 排除搜索输入框（输入框必须维持竖杠，否则很难看） */
+#finder-search {
+  cursor: text !important;
+}
+.top-bar {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -ms-user-select: none !important;
+  -moz-user-select: none !important;
+  cursor: default !important; /* 顶栏背景维持标准箭头 */
+}
+/* 凡是有关闭、打开、切换功能的按钮，统统显示小手 */
+[onclick], 
+button, 
+.drag-handle {
+  cursor: pointer;
+}
+
+/* 但是，拖拽区域如果正在拖拽，建议维持原样或用 grabbing */
+.app-window.dragging {
+  cursor: grabbing;
+}
+/* 禁止选中顶栏文字 */
+.top-bar {
+  user-select: none;         /* 现代浏览器 */
+  -webkit-user-select: none;  /* Safari/Chrome */
+  cursor: default;           /* 确保鼠标在顶栏是默认箭头 */
+}
+body {
+  cursor: default; /* 全局默认是箭头 */
+  margin: 0;
+  overflow: hidden;
+}
+/* 如果你也想让整个桌面背景都不能选文字，可以加给桌面的容器 */
+.desktop-container {
+  user-select: none;
+  -webkit-user-select: none;
+}
+/* 让分类文字小一点，灰一点，更有科技感 */
+  .file-category {
+    font-size: 10px;
+    color: #999;
+    background: rgba(0,0,0,0.05);
+    border-radius: 4px;
+    padding: 1px 4px;
+    display: inline-block;
+    margin-top: 2px;
+  }
+  .view-mac {
+    height: 100vh; width: 100vw; overflow: hidden;
+    background: url('https://4kwallpapers.com/images/wallpapers/macos-sierra-glacier-mountains-snow-covered-alpenglow-3840x2160-6420.jpg') center/cover;
+    position: relative;
+  }
+  .mac-menubar {
+    height: 30px; background: rgba(255,255,255,0.1); backdrop-filter: blur(20px);
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 15px; color: white; font-size: 13px; z-index: 10000;
+  }
+  .window-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    display: none; z-index: 1000; pointer-events: none;
+  }
+  .window-overlay.active { display: block; } 
+
+  .app-window {
+    position: absolute;
+    width: 800px;
+    height: 500px;
+    background: white; border-radius: 12px; overflow: hidden;
+    display: flex; flex-direction: column; pointer-events: auto;
+    box-shadow: 0 30px 100px rgba(0,0,0,0.5);
+    /* 打开时的动画，拖拽时会通过 JS 移除 transition */
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
+    transform: scale(0.95); opacity: 0;
+  }
+  
+  /* 强制全屏样式，增加优先级 */
+  .view-mac .app-window.is-fullscreen {
+    width: 100vw !important;
+    height: calc(100vh - 30px) !important;
+    top: 30px !important;
+    left: 0 !important;
+    border-radius: 0 !important;
+    transform: none !important;
+    opacity: 1 !important;
+    z-index: 9999 !important;
+  }
+
+  .window-header { height: 40px; background: #f6f6f6; display: flex; align-items: center; padding: 0 15px; position: relative; }
+  /* 鼠标指在标题栏上时显示“准备抓取的手” */
+.drag-handle {
+  cursor: grab !important;
+}
+
+/* 正在拖拽时显示“抓紧的手” */
+.app-window:active, .icon-unit:active {
+  cursor: grabbing !important;
+}
+  .dot-group { display: flex; gap: 8px; z-index: 5; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
+  .dot-red { background: #ff5f56; } .dot-yellow { background: #ffbd2e; } .dot-green { background: #27c93f; }
+  .window-title { position: absolute; width: 100%; text-align: center; color: #666; font-size: 13px; font-weight: 600; pointer-events: none; left: 0; }
+
+  /* Dock 样式 */
+  .mac-dock-container { position: absolute; bottom: 10px; width: 100%; display: flex; justify-content: center; pointer-events: none; }
+  .mac-dock { background: rgba(255,255,255,0.2); backdrop-filter: blur(20px); padding: 8px; border-radius: 20px; display: flex; gap: 10px; align-items: center; pointer-events: auto; }
+  .dock-item { width: 50px; height: 50px; background: white; border-radius: 12px; font-size: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+  .dock-divider { width: 1px; height: 35px; background: rgba(255,255,255,0.3); display: none; margin: 0 5px; }
+  .min-zone { display: flex; gap: 10px; }
+  
+  /* 列表样式 */
+  .desktop-icons { padding: 60px 30px; }
+  .icon-unit { display: flex; flex-direction: column; align-items: center; width: 80px; position: absolute; }
+  .folder-icon { font-size: 50px; }
+  .icon-label { color: white; font-size: 12px; margin-top: 5px; text-shadow: 0 1px 3px #000; }
+  .finder-layout { user-select: none; display: flex; flex: 1; height: 100%; }
+  .sidebar { width: 160px; background: #f0f0f0; padding: 15px; }
+  .content-grid { flex: 1; padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, 80px); gap: 20px; }
+  .grid-item { text-align: center; cursor: pointer; }
+  .file-icon { font-size: 40px; }
+  .file-name { font-size: 11px; margin-top: 5px; }
+  .post-content { user-select: text !important; padding: 40px; overflow-y: auto; background: white; }
+  /* 侧边栏容器：增加内边距 */
+.sidebar {
+  padding: 12px 8px; /* 侧边整体留白 */
+  background: rgba(255, 255, 255, 0.4); /* 半透明磨砂感 */
+  backdrop-filter: blur(10px);
+}
+
+/* 侧边栏标签（分类名）样式 */
+.sidebar-item {
+  padding: 8px 12px;
+  margin: 4px 0; /* 增加上下间距，不再拥挤 */
+  border-radius: 8px; /* 苹果风格的圆角 */
+  cursor: pointer;
+  font-size: 13px;
+  color: #333;
+  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1); /* 丝滑过渡 */
+  display: flex;
+  align-items: center;
+  gap: 8px; /* 图标和文字的间距 */
+}
+
+/* 鼠标悬浮效果 */
+.sidebar-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* 点击/激活状态：苹果经典蓝色 */
+.sidebar-item.active {
+  background: linear-gradient(180deg, #007AFF 0%, #0056B3 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 122, 255, 0.3);
+}
+
+/* 分类标签的文字稍微变细一点，更有高级感 */
+.sidebar-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8e8e93;
+  padding: 10px 12px 4px;
+  text-transform: uppercase; /* 英文分类会变大写，更有设计感 */
+}
+.content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 20px; /* 增加文件图标之间的间距 */
+  padding: 20px;
+}
+
+.grid-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  border-radius: 10px;
+  transition: background 0.2s;
+}
+
+.grid-item:hover {
+  background: rgba(0, 0, 0, 0.05); /* 鼠标移上去有个浅色底 */
+}
+</style>
+
+<script is:inline>
+// --- 全局变量定义 ---
+let windowCount = 0;      // 用于窗口错开计数
+let highestZIndex = 1000; // 全局最高层级计数器
+const WIN_W = 800;        // 窗口预设宽度
+const WIN_H = 500;        // 窗口预设高度
+const STEP = 30;          // 错开像素步长
+
+// --- 1. 置顶逻辑 (核心修复) ---
+function bringToFront(el) {
+  if (!el) return;
+  highestZIndex++;
+  // 提升整个容器（overlay）的层级
+  el.style.zIndex = highestZIndex;
+}
+
+// --- 2. 窗口控制 ---
+function openWin(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const win = el.querySelector('.app-window');
+
+  // 更新 Dock 栏小圆点 (active 状态)
+  document.querySelectorAll('.dock-item').forEach(item => {
+    // 匹配 onclick 属性中包含该 ID 的图标
+    if (item.getAttribute('onclick')?.includes(id)) {
+      item.classList.add('active');
+    }
+  });
+
+  // 如果窗口当前是隐藏状态，初始化位置
+  if (el.style.display === 'none' || el.style.display === '') {
+    const screenW = window.innerWidth;
+    const screenH = window.innerHeight;
+    let left = (screenW - WIN_W) / 2;
+    let top = (screenH - WIN_H) / 2 - 40;
+
+    // 阶梯错开逻辑
+    const offset = (windowCount % 10) * STEP;
+    win.style.left = (left + offset) + 'px';
+    win.style.top = (top + offset) + 'px';
+    win.style.margin = "0"; 
+
+    el.style.display = 'block';
+    windowCount++; 
+  }
+
+  // 执行打开动画
+  setTimeout(() => {
+    el.classList.add('active'); // 用于 CSS 动画控制
+    win.style.transform = "scale(1)";
+    win.style.opacity = "1";
+  }, 10);
+
+  // 重要：显示时立即置顶
+  bringToFront(el);
+
+  // 如果是从最小化恢复，移除最小化图标
+  const dIcon = document.getElementById('d-icon-' + id);
+  if (dIcon) dIcon.remove();
+  updateDockDivider();
+}
+
+function closeWin(id) {
+  const el = document.getElementById(id);
+  const win = el.querySelector('.app-window');
+  
+  // 关窗动画
+  win.style.transform = "scale(0.9)";
+  win.style.opacity = "0";
+  
+  // 清除 Dock 小圆点
+  document.querySelectorAll('.dock-item').forEach(item => {
+    if (item.getAttribute('onclick')?.includes(id)) {
+      item.classList.remove('active');
+    }
+  });
+
+  setTimeout(() => {
+    el.classList.remove('active');
+    el.style.display = 'none';
+  }, 300);
+}
+
+function minWin(id, emoji) {
+  const el = document.getElementById(id);
+  const win = el.querySelector('.app-window');
+  
+  // 最小化动画
+  win.style.transform = "scale(0.1) translateY(1000px)";
+  win.style.opacity = "0";
+
+  setTimeout(() => {
+    el.style.display = 'none';
+    // 放入 Dock 最小化区域
+    if (!document.getElementById('d-icon-' + id)) {
+      const zone = document.getElementById('min-zone');
+      const icon = document.createElement('div');
+      icon.id = 'd-icon-' + id;
+      icon.className = 'dock-item';
+      icon.innerHTML = emoji;
+      icon.onclick = () => openWin(id);
+      zone.appendChild(icon);
+      updateDockDivider();
+    }
+  }, 300);
+}
+
+function toggleFull(btn) {
+  const win = btn.closest('.app-window');
+  win.classList.toggle('is-fullscreen');
+}
+
+function updateDockDivider() {
+  const zone = document.getElementById('min-zone');
+  const divider = document.getElementById('dock-divider');
+  if (divider) divider.style.display = zone.children.length > 0 ? "block" : "none";
+}
+
+// --- 3. 拖拽引擎 ---
+let dragObj = null;
+let startMouseX, startMouseY, startObjX, startObjY;
+
+document.addEventListener('mousedown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+
+  const handle = e.target.closest('.drag-handle');
+  if (!handle) return;
+
+  // 这里的 target 是窗口本体或图标
+  const target = handle.closest('.app-window') || handle.closest('.icon-unit');
+  if (!target || target.classList.contains('is-fullscreen')) return;
+
+  dragObj = target;
+  dragObj.style.transition = 'none'; // 拖拽时关闭过渡动画
+  
+  // 只要点中窗口任何地方（通过冒泡）或标题栏，就置顶
+  const overlay = dragObj.closest('.window-overlay');
+  if (overlay) {
+    bringToFront(overlay);
+  }
+
+  startMouseX = e.clientX;
+  startMouseY = e.clientY;
+  startObjX = dragObj.offsetLeft;
+  startObjY = dragObj.offsetTop;
+
+  e.preventDefault(); // 防止文字选中
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (!dragObj) return;
+  const deltaX = e.clientX - startMouseX;
+  const deltaY = e.clientY - startMouseY;
+  dragObj.style.left = (startObjX + deltaX) + 'px';
+  dragObj.style.top = (startObjY + deltaY) + 'px';
+  dragObj.style.margin = "0"; 
+});
+
+document.addEventListener('mouseup', () => {
+  if (dragObj) {
+    if (dragObj.classList.contains('app-window')) {
+      dragObj.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s';
+    }
+    dragObj = null;
+  }
+});
+
+// --- 4. 辅助功能 (时钟与过滤) ---
+setInterval(() => {
+  const clock = document.getElementById('mac-clock');
+  if (clock) {
+    const now = new Date();
+    clock.innerText = now.toLocaleString('zh-CN', {
+      year:'numeric', month:'short', day:'numeric', weekday:'short', 
+      hour:'2-digit', minute:'2-digit', hour12:false
+    }).replace(/\//g,'年');
+  }
+}, 1000);
+
+let currentCategory = 'all';
+
+// 定义到全局 window 上，确保 HTML 里的 onclick 能找到
+window.filterByCategory = function(cat, el) {
+  currentCategory = cat;
+  document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+  el.classList.add('active');
+  filterPosts();
+};
+
+window.filterPosts = function() {
+  const query = document.getElementById('finder-search')?.value.toLowerCase() || "";
+  const items = document.querySelectorAll('.post-item');
+  items.forEach(item => {
+    const title = item.querySelector('.file-name').innerText.toLowerCase();
+    const category = item.querySelector('.file-category').innerText;
+    const matchCategory = (currentCategory === 'all' || category === currentCategory);
+    const matchSearch = title.includes(query);
+    item.style.display = (matchCategory && matchSearch) ? 'flex' : 'none';
+  });
+};
+
+// 暴露函数给 HTML
+window.openWin = openWin;
+window.closeWin = closeWin;
+window.minWin = minWin;
+window.toggleFull = toggleFull;
+window.bringToFront = bringToFront;
+</script>

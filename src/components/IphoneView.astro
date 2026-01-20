@@ -1,0 +1,481 @@
+---
+import IphoneWindow from '../components/IphoneWindow.astro';
+const { posts } = Astro.props;
+
+// 1. 自动提取所有不重复的分类
+const categories = [...new Set(posts.map(post => post.data.category))];
+---
+
+<div class="view-iphone">
+  <div class="iphone-statusbar">
+    <div id="iphone-clock">00:00</div>
+    <div class="dynamic-island"></div>
+    <div class="iphone-status-icons">📶 5G 🔋</div>
+  </div>
+
+  <div class="iphone-home-screen">
+    <div class="iphone-grid">
+      <div class="iphone-app" onclick="openIphoneWin('iphone-folder')">
+        <div class="iphone-folder-icon glass">
+          <div class="mini-app-grid">
+            <div style="background:#fff"></div><div style="background:#007aff"></div>
+            <div style="background:#27c93f"></div><div style="background:#ff9500"></div>
+          </div>
+        </div>
+        <div class="app-label">博文归档</div>
+      </div>
+      
+      <div class="iphone-app">
+        <div class="iphone-icon-box" onclick="openIphoneWin('iphone-photos')" style="background: linear-gradient(#54d3ff, #007aff);">📷</div>
+        <div class="app-label">照片</div>
+      </div>
+      <div class="iphone-app" onclick="openIphoneWin('iphone-settings')">
+      <div class="iphone-icon-box" style="background: #fff;">⚙️</div>
+      <div class="app-label">设置</div>
+    </div>
+    
+    </div>
+  </div>
+
+<IphoneWindow id="iphone-settings" title="系统设置">
+  <div class="settings-ui">
+    <div class="setting-item">飞行模式 ✈️</div>
+    <div class="setting-item">无线局域网 📶</div>
+  </div>
+</IphoneWindow>
+
+<IphoneWindow id="iphone-photos" title="所有照片">
+  <div class="photo-grid">
+    <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000" />
+    <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000" />
+  </div>
+</IphoneWindow>
+
+<IphoneWindow id="iphone-phone" title="电话">
+  <div class="keypad-container" style="padding: 40px 20px; text-align: center;">
+    <div class="phone-number" style="font-size: 32px; margin-bottom: 30px; font-weight: 300;">
+      10086
+    </div>
+    
+    <div class="keypad-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 280px; margin: 0 auto;">
+      {[1,2,3,4,5,6,7,8,9,'*',0,'#'].map(num => (
+        <div style="width: 70px; height: 70px; background: #e3e3e8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+          {num}
+        </div>
+      ))}
+    </div>
+
+    <a href="tel:10086" style="display: inline-block; width: 70px; height: 70px; background: #27c93f; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; margin-top: 30px; text-decoration: none;">
+      📞
+    </a>
+  </div>
+</IphoneWindow>
+
+
+
+<IphoneWindow id="iphone-safari" title="Safari 浏览器">
+  <div class="safari-wrapper">
+    <div class="safari-search-section">
+      <div class="safari-input-box">
+        <span>🔍</span>
+        <input 
+          type="text" 
+          id="safari-search-input" 
+          placeholder="搜索或输入网站名称" 
+          onkeydown="if(event.key==='Enter') doSafariSearch()"
+        />
+        <button onclick="doSafariSearch()" style="color: #007aff; border: none; background: none; font-size: 14px; font-weight: 600;">搜索</button>
+      </div>
+    </div>
+
+    <div class="safari-favorites">
+      <div class="favorite-title">个人收藏</div>
+      <div class="favorite-grid">
+        <a href="https://www.baidu.com" target="_blank" class="fav-item">
+          <div class="fav-icon" style="background: #fff; color: #2133ed;">B</div>
+          <div class="fav-label">百度</div>
+        </a>
+        <a href="https://github.com" target="_blank" class="fav-item">
+          <div class="fav-icon" style="background: #181717; color: #fff;">G</div>
+          <div class="fav-label">GitHub</div>
+        </a>
+        <a href="https://v.qq.com" target="_blank" class="fav-item">
+          <div class="fav-icon" style="background: #ff5c38; color: #fff;">V</div>
+          <div class="fav-label">腾讯视频</div>
+        </a>
+        <a href="https://www.bilibili.com" target="_blank" class="fav-item">
+          <div class="fav-icon" style="background: #fb7299; color: #fff;">B</div>
+          <div class="fav-label">B站</div>
+        </a>
+      </div>
+    </div>
+  </div>
+</IphoneWindow>
+
+<IphoneWindow id="iphone-music" title="网易云音乐">
+  <div class="music-wrapper" style="height: 100%; background: #f5f5f7;">
+    <iframe 
+      id="music-iframe"
+      frameborder="no" 
+      border="0" 
+      marginwidth="0" 
+      marginheight="0" 
+      width="100%" 
+      height="100%" 
+      src="//music.163.com/outchain/player?type=0&id=3778678&auto=0&height=430">
+    </iframe>
+  </div>
+</IphoneWindow>
+
+<IphoneWindow id="iphone-mail" title="联系我">
+  <div style="padding: 40px 20px; text-align: center;">
+    <div style="font-size: 60px; margin-bottom: 20px;">✉️</div>
+    <h3>有问题想反馈？</h3>
+    <p style="color: #666; margin-bottom: 30px;">点击下方按钮给我发邮件</p>
+    <a href="mailto:jxe2131@outlook.com" style="display: block; background: #007aff; color: white; padding: 15px; border-radius: 12px; text-decoration: none; font-weight: 600;">发送邮件</a>
+  </div>
+</IphoneWindow>
+
+  <IphoneWindow id="iphone-folder" title="博文归档">
+    <div class="iphone-search-bar">
+      <div class="search-input-wrapper">
+        <span>🔍</span>
+        <input 
+          type="text" 
+          id="iphone-finder-search" 
+          placeholder="搜索文章..." 
+          oninput="filterIphonePosts()"
+        />
+      </div>
+    </div>
+
+    <div class="iphone-category-bar">
+      <div class="iphone-cat-item active" onclick="filterIphoneByCategory('all', this)">全部</div>
+      {categories.map(cat => (
+        <div class="iphone-cat-item" onclick={`filterIphoneByCategory('${cat}', this)`}>{cat}</div>
+      ))}
+    </div>
+
+    <div class="iphone-list-group" id="iphone-post-list">
+      {posts.map(post => (
+        <div 
+          class="iphone-list-item" 
+          data-category={post.data.category}
+          onclick={`openIphoneWin('iphone-post-${post.id}')`}
+        >
+          <div class="item-icon">📄</div>
+          <div class="item-info">
+            <div class="item-title">{post.data.title}</div>
+            <div class="item-date">{post.data.date}</div>
+          </div>
+          <div class="item-arrow">〉</div>
+        </div>
+      ))}
+    </div>
+  </IphoneWindow>
+
+  {posts.map(post => (
+    <IphoneWindow id={`iphone-post-${post.id}`} title="正文内容">
+      <div class="iphone-article">
+        <h1>{post.data.title}</h1>
+        <div class="article-meta">{post.data.date}</div>
+        <div class="article-body">
+          {post.data.description}
+        </div>
+      </div>
+    </IphoneWindow>
+  ))}
+
+  <div class="iphone-dock-container">
+  <div class="iphone-dock glass">
+    <div class="dock-app" onclick="openIphoneWin('iphone-phone')"  style="background: linear-gradient(#63f17a, #27c93f);">📞</div>
+    
+    <div class="dock-app" onclick="openIphoneWin('iphone-mail')" style="background: linear-gradient(#63f17a, #27c93f);">💬</div>
+    
+    <div class="dock-app" onclick="openIphoneWin('iphone-safari')" style="background: #fff;">🌐</div>
+    
+    <div class="dock-app" onclick="openIphoneWin('iphone-music')" style="background: linear-gradient(#fb5f74, #fa2d48);">🎵</div>
+  </div>
+</div>
+</div>
+
+<style>
+.safari-wrapper {
+  padding: 20px;
+  background: #fff;
+  height: 100%;
+}
+
+.safari-search-section {
+  margin-top: 10px;
+  margin-bottom: 30px;
+}
+
+.safari-input-box {
+  background: #e3e3e8;
+  border-radius: 12px;
+  padding: 10px 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.safari-input-box input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 16px;
+}
+
+.favorite-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 15px;
+  color: #000;
+}
+
+.favorite-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.fav-item {
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.fav-icon {
+  width: 55px;
+  height: 55px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  background: #f2f2f7;
+}
+
+.fav-label {
+  font-size: 12px;
+  color: #333;
+}
+.iphone-dock-container {
+  position: absolute;
+  bottom: 0; /* 改为 0 */
+  padding-bottom: 20px; /* 用 padding 撑开 */
+  /* 如果是真机，可以使用这个 CSS 变量 */
+  padding-bottom: env(safe-area-inset-bottom, 20px); 
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+/* 针对音乐和浏览器窗口的特殊优化 */
+#iphone-music .iphone-page-body,
+#iphone-safari .iphone-page-body {
+  padding: 0 !important; /* 满屏展示 */
+  overflow: hidden; /* 防止出现双滚动条 */
+}
+
+iframe {
+  display: block;
+}
+.dock-app {
+  width: 55px;
+  height: 55px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  cursor: pointer;
+  transition: transform 0.2s;
+  color: #fff; /* 让 Emoji 以外的文字/图标变白 */
+}
+
+.dock-app:active {
+  transform: scale(0.9); /* 点击时的缩放反馈 */
+}
+
+/* 浏览器全屏适配 */
+#iphone-safari .iphone-page-body {
+  padding: 0; /* 浏览器不需要内边距 */
+  overflow: hidden;
+}
+.iphone-statusbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0; /* 必须给宽度 */
+  height: 44px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 25px;
+  color: #fff; /* 默认主屏幕是白字 */
+  font-weight: 600;
+  font-size: 14px;
+  z-index: 9999;
+  pointer-events: none;
+  transition: color 0.3s; /* 让变色平滑一点 */
+}
+/* 调整返回按钮和标题的位置，确保它们在状态栏下方居中 */
+.iphone-page-header button, 
+.iphone-title {
+  margin-top: 5px; 
+}
+/* 强制所有地方都用这种细长的 Mac/iOS 滚动条 */
+:global(*) {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.2) transparent;
+}
+
+:global(*::-webkit-scrollbar) {
+  width: 5px;
+}
+
+:global(*::-webkit-scrollbar-thumb) {
+  background: rgba(0,0,0,0.2);
+  border-radius: 10px;
+}
+  /* --- 基础布局 --- */
+  .view-iphone {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    display: flex; flex-direction: column;
+    background: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000') center/cover;
+    z-index: 100; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+  }
+
+  .iphone-statusbar {
+    position: fixed; /* 变成固定定位 */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 25px;
+    color: #000;
+    height: 44px; /* iOS 标准高度 */
+    font-weight: 600;
+    z-index: 9999; /* 比弹窗的 5000 还要高 */
+    pointer-events: none; /* 重要：防止状态栏遮挡下方按钮的点击 */
+  }
+ .iphone-title {
+    margin-top: 10px; /* 给上面的时间留点空位 */
+  }
+  /* src/components/IphoneWindow.astro */
+  .dynamic-island { width: 100px; height: 25px; background: #000; border-radius: 20px; }
+.iphone-home-screen {
+/* 增加顶部内边距，确保图标从状态栏下方开始排列 */
+  padding: 60px 20px 20px; 
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.iphone-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 25px 20px; /* 增加行间距 */
+    align-content: start;
+}
+  .iphone-app { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+  .iphone-icon-box, .iphone-folder-icon { width: 60px; height: 60px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+  .glass { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.2); }
+  .mini-app-grid { display: grid; grid-template-columns: repeat(2, 20px); gap: 4px; }
+  .mini-app-grid div { width: 20px; height: 20px; border-radius: 4px; }
+  .app-label { color: white; font-size: 11px; margin-top: 6px; }
+
+  /* --- 搜索与分类 --- */
+  .iphone-search-bar { padding: 10px 15px; background: #fff; }
+  .search-input-wrapper { background: #e3e3e8; border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; }
+  .search-input-wrapper input { border: none; background: transparent; width: 100%; outline: none; font-size: 16px; }
+
+  .iphone-category-bar { display: flex; overflow-x: auto; padding: 10px 15px; gap: 10px; background: #fff; }
+  .iphone-category-bar::-webkit-scrollbar { display: none; }
+  .iphone-cat-item { padding: 6px 16px; background: #e3e3e8; border-radius: 20px; font-size: 14px; white-space: nowrap; }
+  .iphone-cat-item.active { background: #007aff; color: white; }
+
+  /* --- 列表与文章 --- */
+  .iphone-list-group { margin: 15px; background: white; border-radius: 12px; overflow: hidden; }
+  .iphone-list-item { display: flex; align-items: center; padding: 12px 15px; border-bottom: 0.5px solid #eee; }
+  .item-info { flex: 1; margin-left: 10px; }
+  .item-title { font-weight: 500; font-size: 16px; color: #000; }
+  .item-date { font-size: 12px; color: #888; }
+
+  .iphone-article { padding: 20px; }
+  .article-meta { color: #888; margin-bottom: 20px; }
+  .article-body { line-height: 1.6; font-size: 17px; }
+
+  /* --- Dock --- */
+  .iphone-dock-container { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: center; }
+  .iphone-dock { width: 90%; height: 80px; border-radius: 25px; display: flex; justify-content: space-around; align-items: center; }
+  .dock-app { width: 55px; height: 55px; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+  
+</style>
+
+<script is:inline>
+  let currentIphoneCategory = 'all';
+
+  window.openIphoneWin = function(id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.add('active');
+      // 变黑字
+      document.querySelector('.iphone-statusbar').style.color = '#000';
+    }
+  };
+
+  window.closeIphoneWin = function(id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.remove('active');
+      // 变白字
+      document.querySelector('.iphone-statusbar').style.color = '#fff';
+    }
+  };
+
+  window.filterIphoneByCategory = function(cat, el) {
+    currentIphoneCategory = cat;
+    document.querySelectorAll('.iphone-cat-item').forEach(item => item.classList.remove('active'));
+    el.classList.add('active');
+    filterIphonePosts();
+  };
+
+  window.filterIphonePosts = function() {
+    const searchInput = document.getElementById('iphone-finder-search');
+    const query = searchInput ? searchInput.value.toLowerCase() : "";
+    const items = document.querySelectorAll('#iphone-post-list .iphone-list-item');
+    items.forEach(item => {
+      const title = item.querySelector('.item-title').innerText.toLowerCase();
+      const category = item.getAttribute('data-category');
+      const matchCategory = (currentIphoneCategory === 'all' || category === currentIphoneCategory);
+      const matchSearch = title.includes(query);
+      item.style.display = (matchCategory && matchSearch) ? 'flex' : 'none';
+    });
+  };
+
+  function updateIphoneClock() {
+    const clock = document.getElementById('iphone-clock');
+    if (clock) {
+      const now = new Date();
+      clock.innerText = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    }
+  }
+  window.doSafariSearch = function() {
+  const input = document.getElementById('safari-search-input');
+  const query = input.value.trim();
+  
+  if (query) {
+    // 跳转到百度搜索结果页，并在新窗口打开（防止当前 App 状态丢失）
+    window.open(`https://www.baidu.com/s?wd=${encodeURIComponent(query)}`, '_blank');
+    // 可选：跳转后清空输入框
+    input.value = '';
+  }
+};
+  setInterval(updateIphoneClock, 1000);
+  updateIphoneClock();
+</script>
