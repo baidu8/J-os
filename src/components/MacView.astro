@@ -3,6 +3,18 @@ const { posts, categories = [] } = Astro.props;
 import Window from './Window.astro';
 ---
 
+{posts.map((post) => (
+  <Window 
+    id={`post-${post.id}`} 
+    title={post.data.title} 
+    emoji={post.data.emoji || '📄'}
+    category={post.data.category}  >
+    <div class="post-content">
+       <post.Content /> 
+    </div>
+  </Window>
+))}
+
 <div class="view-mac">
   <div class="mac-menubar">
     <div class="menu-left"><b></b> <span onclick="openWin('mac-finder')">访达</span> 文件 编辑 显示 前往 窗口 帮助</div>
@@ -41,13 +53,6 @@ import Window from './Window.astro';
     </div>
   </Window>
 
-  <Window id="mac-safari" title="浏览器" emoji="🧭">
-    <div style="padding: 40px; text-align: center; width: 100%;">
-      <h2>模拟浏览器窗口</h2>
-      <p>这里可以放你的个人介绍或者其他项目。</p>
-    </div>
-  </Window>
-
   <Window id="mac-message" title="标签" emoji="🧭">
     <div style="padding: 40px; text-align: center; width: 100%;">
       <h2>模拟浏览器窗口</h2>
@@ -55,43 +60,82 @@ import Window from './Window.astro';
     </div>
   </Window>
 
-  {posts.map(post => (
-  <Window id={`post-${post.id}`} title="文章预览" emoji="📄">
-    <div class="post-content" style="padding: 30px; width: 100%; height: 100%; overflow-y: auto; background: #fff; color: #333;">
-      <div style="max-width: 800px; margin: 0 auto;">
-        <h1 style="margin-top: 0; font-size: 28px; color: #000;">{post.data.title}</h1>
-        
-        <div class="post-meta" style="color: #888; font-size: 14px; margin-bottom: 15px; display: flex; gap: 15px;">
-           <span>📅 {post.data.date}</span>
-           {post.data.category && <span>📁 {post.data.category}</span>}
+  <Window id="mac-safari" title="" emoji="🧭">
+    <div class="safari-full-container">
+      <div class="safari-nav-bar">
+        <div class="address-capsule">
+          <span class="icon">🔒</span> google.com
         </div>
-        
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
-        
-        <div class="markdown-body" style="line-height: 1.8; font-size: 16px;">
-          <post.Content />
+      </div>
+      <div class="google-viewport">
+        <div class="google-center-content">
+          <div class="google-branding">
+            <span style="color: #4285F4">G</span><span style="color: #EA4335">o</span><span style="color: #FBBC05">o</span><span style="color: #4285F4">g</span><span style="color: #34A853">l</span><span style="color: #EA4335">e</span>
+          </div>
+          <div class="google-search-group">
+            <div class="google-search-input-field">
+              <span class="prefix-icon">🔍</span>
+              <input type="text" id="google-search-input" placeholder="在 Google 上搜索..." autocomplete="off" />
+              <span class="suffix-icon">🎙️</span>
+            </div>
+          </div>
+          <div class="google-action-btns">
+            <button>Google 搜索</button>
+            <button>手气不错</button>
+          </div>
         </div>
       </div>
     </div>
   </Window>
-))}
+
+  <Window id="mac-photos" title="相册" emoji="🖼️">
+    <div class="photos-container">
+      <div class="photos-sidebar">
+        <div class="sidebar-group">库</div>
+        <div class="sidebar-item active">📸 所有照片</div>
+        <div class="sidebar-group">我的摄影集</div>
+        <div id="photos-post-links" class="sidebar-list">
+          </div>
+      </div>
+      
+      <div class="photos-main">
+        <div class="photos-header">
+          <h2>精选展示</h2>
+          <p>点击左侧查看完整摄影博文</p>
+        </div>
+        <div class="photos-grid">
+          <div class="photo-card"><img src="https://github.com/user-attachments/assets/6fc9bc33-9998-48f6-b1b9-cce7e0e05656" /></div>
+          <div class="photo-card"><img src="https://github.com/user-attachments/assets/e3a50fd2-1a47-493a-b7d0-e82e2f63ce67" /></div>
+          <div class="photo-card"><img src="https://github.com/user-attachments/assets/6b1492e7-9782-448b-89a7-dd0899978307" /></div>
+          <div class="photo-card"><img src="https://github.com/user-attachments/assets/6e712a38-0ed2-4011-99af-340b17c46258" /></div>
+          <div class="photo-card"><img src="https://github.com/user-attachments/assets/aa8c860b-ac00-438d-b1b5-78c06750a535" /></div>
+          <div class="photo-card"><img src="https://github.com/user-attachments/assets/fae013be-b079-4772-8673-887ef9c926a9" /></div>
+        </div>
+      </div>
+    </div>
+  </Window>
+
 
   <div class="mac-dock-container">
     <div class="mac-dock">
       <div class="dock-item" onclick="openWin('mac-finder')">📂</div>
       <div class="dock-item" onclick="openWin('mac-safari')">🧭</div>
+      <div class="dock-item" onclick="openWin('mac-photos')">🖼️</div>
+      <div class="dock-item" onclick="openWin('mac-notes')">📝</div>
       <div class="dock-item" onclick="openWin('mac-message')">💬</div>
+    
       <div id="dock-divider" class="dock-divider"></div>
       <div id="min-zone" class="min-zone"></div>
+      
+      <div class="dock-item trash" onclick="alert('垃圾桶是空的')">🗑️</div> 
     </div>
   </div>
+
 </div>
 
 <div id="mac-image-viewer" class="mac-image-viewer">
   <div class="mac-viewer-overlay" onclick="closeMacViewer()"></div>
-  
   <img id="mac-viewer-img" src="" alt="预览图片" />
-
   <div class="mac-viewer-toolbar">
     <button onclick="changeMacImage(-1)" title="上一张 (←)">❮</button>
     <span id="mac-viewer-counter">1 / 1</span>
@@ -102,426 +146,289 @@ import Window from './Window.astro';
 </div>
 
 <style>
-/* 使用 :global 确保样式能穿透到 Markdown 渲染出的 HTML 中 */
+/* 强制全屏状态覆盖所有动态计算的样式 */
+:global(.app-window.is-fullscreen) {
+  top: 30px !important;    /* 避开顶部菜单栏 */
+  left: 0 !important;
+  width: 100vw !important;
+  height: calc(100vh - 30px) !important;
+  margin: 0 !important;
+  transform: none !important;
+  border-radius: 0 !important; /* 全屏时通常取消圆角 */
+  z-index: 9000 !important;   /* 确保在普通窗口之上，但低于图片预览层 */
+}
+
+/* 隐藏全屏状态下的缩放手柄（如果有的话） */
+:global(.app-window.is-fullscreen .resizer) {
+  display: none;
+}
+/* 1. 基础开关：只针对带有 .image-grid-folder 的容器 */
+:global(.image-grid-folder) {
+  display: flex !important;
+  flex-wrap: wrap !important; /* 允许换行，像文件夹排队一样 */
+  gap: 25px !important;       /* 图标之间的间距 */
+  padding: 15px !important;
+  background: rgba(0, 0, 0, 0.03) !important;
+  border-radius: 8px !important;
+  margin: 20px 0 !important;
+  justify-content: flex-start !important; /* 左对齐 */
+}
+
+/* 2. 彻底清理 Markdown 自动生成的 p、br 干扰，只在特定容器内生效 */
+:global(.image-grid-folder p), 
+:global(.image-grid-folder br) {
+  display: contents !important; /* 消除包裹层，让图片直接参与 flex 布局 */
+}
+
+/* 3. 目标图片：模拟 Win/Mac 文件夹中的“中图标” */
+:global(.image-grid-folder img) {
+  /* 强制固定尺寸 (中图标) */
+  width: 100px !important;
+  height: 100px !important;
+  min-width: 100px !important;
   
-  :global(.image-grid-folder) {
-    display: grid;
-    /* 自动填充，模拟访达的网格布局 */
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 25px;
-    padding: 20px;
-    background: rgba(0, 0, 0, 0.02);
-    border-radius: 12px;
-    margin: 20px 0;
-    justify-items: center;
-  }
+  /* 布局核心：块级排布但在 flex 容器中横向排列 */
+  display: block !important;
+  object-fit: cover !important; /* 图片不拉伸，自动裁剪 */
+  
+  /* 图标视觉风格 */
+  margin: 0 !important;
+  background: #fff !important;
+  padding: 4px !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+  border-radius: 4px !important;
+  
+  transition: transform 0.2s ease !important;
+}
 
-  :global(.image-grid-folder img) {
-    /* 强制固定大小，模拟中图标 */
-    width: 110px !important;
-    height: 110px !important;
-    object-fit: cover !important;
-    margin: 0 !important;
-    
-    /* 访达图标风格：白色底边、细边框、投影 */
-    background: #ffffff;
-    padding: 3px;
-    border: 0.5px solid rgba(0, 0, 0, 0.15);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    border-radius: 4px;
-    
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  }
+/* 4. 悬停效果：模拟选中感 */
+:global(.image-grid-folder img:hover) {
+  transform: scale(1.1) !important;
+  border-color: #007aff !important;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2) !important;
+}
 
-  :global(.image-grid-folder img:hover) {
-    transform: scale(1.08) translateY(-2px);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
-    border-color: #007aff; /* 模拟选中的蓝色 */
-  }
-
-  /* 适配正文里的其他普通图片，也稍微控制一下 */
-  :global(.markdown-body img:not(.image-grid-folder img)) {
-    max-width: 60%;
-    height: auto;
-    display: block;
-    margin: 20px auto;
-    border-radius: 8px;
-    cursor: zoom-in;
-  }
-/* 针对 Mac 窗口内 Markdown 内容的全局样式补丁 */
-  .markdown-body img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px;
-    margin: 20px 0;
-    display: block;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  }
-  .markdown-body p {
-    margin-bottom: 1.5em;
-  }
-  .markdown-body h2 {
-    margin-top: 1.5em;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 0.3em;
-  }
-  .markdown-body pre {
-    background: #f6f8fa;
-    padding: 16px;
-    border-radius: 6px;
-    overflow: auto;
-    font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, monospace;
-  }
-/* 使用 :global 确保样式能穿透组件隔离 */
-  :global(.window-body::-webkit-scrollbar),
-  :global(.sidebar::-webkit-scrollbar),
-  :global(.content-grid::-webkit-scrollbar) {
-    width: 6px !important;  /* 调细一点更像 Mac */
-    height: 6px !important;
-  }
-
-  :global(.window-body::-webkit-scrollbar-track) {
-    background: transparent !important;
-  }
-
-  :global(.window-body::-webkit-scrollbar-thumb) {
-    background-color: rgba(0, 0, 0, 0.2) !important; /* 半透明灰色 */
-    border-radius: 10px !important;
-    border: 1px solid transparent !important;
-    background-clip: content-box !important;
-  }
-
-  :global(.window-body::-webkit-scrollbar-thumb:hover) {
-    background-color: rgba(0, 0, 0, 0.4) !important; /* 鼠标悬浮时加深 */
-  }
-img {
-  max-width: 100%; /* 图片永远不会超过窗口宽度 */
+/* 5. 保持安全性：普通博文图片不受影响 */
+:global(.markdown-body img:not(.image-grid-folder img)) {
+  max-width: 100%;
   height: auto;
+  display: block;
+  margin: 20px auto;
 }
-/* 让图标划过时变大 */
-.dock-item {
-  font-size: 28px; /* 调大 Emoji 大小 */
-  cursor: pointer !important;
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); /* 带有弹性的放大 */
-  position: relative;
+/* --- 基础布局 --- */
+.view-mac { height: 100vh; width: 100vw; overflow: hidden; position: relative; background: url('https://4kwallpapers.com/images/wallpapers/macos-sierra-glacier-mountains-snow-covered-alpenglow-3840x2160-6420.jpg') center/cover; }
+.mac-menubar { height: 30px; background: rgba(255,255,255,0.1); backdrop-filter: blur(20px); display: flex; justify-content: space-between; align-items: center; padding: 0 15px; color: white; font-size: 13px; z-index: 10000; }
+.desktop-icons { padding: 60px 30px; }
+.icon-unit { display: flex; flex-direction: column; align-items: center; width: 80px; position: absolute; cursor: pointer; }
+.folder-icon { font-size: 50px; }
+.icon-label { color: white; font-size: 12px; margin-top: 5px; text-shadow: 0 1px 3px #000; }
+
+/* --- 窗口样式 --- */
+.app-window { position: absolute; width: 800px; height: 500px; background: white; border-radius: 12px; box-shadow: 0 30px 100px rgba(0,0,0,0.5); overflow: hidden; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s; opacity: 0; transform: scale(0.95); display: flex; flex-direction: column; }
+.view-mac .app-window.is-fullscreen { width: 100vw !important; height: calc(100vh - 30px) !important; top: 30px !important; left: 0 !important; border-radius: 0 !important; transform: none !important; opacity: 1 !important; z-index: 9999 !important; }
+.window-header { height: 40px; background: #f6f6f6; display: flex; align-items: center; padding: 0 15px; position: relative; }
+.window-title { position: absolute; width: 100%; text-align: center; color: #666; font-size: 13px; font-weight: 600; pointer-events: none; left: 0; }
+.drag-handle { cursor: grab !important; }
+.app-window:active .drag-handle { cursor: grabbing !important; }
+
+/* --- Dock 栏样式 --- */
+  .mac-dock-container {
+    position: absolute; bottom: 20px; width: 100%;
+    display: flex; justify-content: center; pointer-events: none;
+    z-index: 9999;
+  }
+
+  .mac-dock {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    padding: 8px; border-radius: 20px;
+    display: flex; gap: 10px; align-items: center;
+    pointer-events: auto; border: 0.5px solid rgba(255, 255, 255, 0.3);
+  }
+  /* 2. 核心：Dock 图标通用样式（包括动态生成的） */
+  .dock-item, :global(.min-zone .dock-item) {
+    width: 50px !important;
+    height: 50px !important;
+    background: rgba(255, 255, 255, 0.3) !important; /* 统一磨砂白 */
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; cursor: pointer;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), margin 0.3s;
+    position: relative;
+    border: 0.5px solid rgba(255, 255, 255, 0.4);
+  }
+
+  /* 3. 悬停特效 */
+  .dock-item:hover, :global(.min-zone .dock-item:hover) {
+    transform: scale(1.3) translateY(-10px);
+    margin: 0 10px;
+  }
+  /* 4. 分割线与最小化区域 */
+  .dock-divider {
+    width: 1px; height: 35px;
+    background: rgba(255, 255, 255, 0.3);
+    margin: 0 5px; display: none; /* 由 JS 控制显示 */
+  }
+
+  .min-zone {
+    display: flex; gap: 10px; align-items: center;
+  }
+  .dock-item { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 28px; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border-radius: 12px; cursor: pointer; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), margin 0.3s; position: relative; border: 0.5px solid rgba(255, 255, 255, 0.3); }
+.dock-item:hover { transform: scale(1.3) translateY(-10px); margin: 0 10px; }
+.dock-item.active::after, .min-zone .dock-item::after { content: ''; position: absolute; bottom: -8px; width: 4px; height: 4px; background: rgba(255, 255, 255, 0.8); border-radius: 50%; }
+.dock-divider { width: 1px; height: 35px; background: rgba(255, 255, 255, 0.3); margin: 0 10px; display: none; }
+.min-zone { display: flex; gap: 10px; }
+
+/* --- 访达 Finder 样式 --- */
+.sidebar { width: 160px; background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(10px); padding: 12px 8px; border-right: 1px solid rgba(0,0,0,0.1); }
+.sidebar-item { padding: 8px 12px; margin: 4px 0; border-radius: 8px; cursor: pointer; font-size: 13px; color: #333; display: flex; align-items: center; gap: 8px; }
+.sidebar-item:hover { background: rgba(0, 0, 0, 0.05); }
+.sidebar-item.active { background: linear-gradient(180deg, #007AFF 0%, #0056B3 100%); color: white; }
+.content-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 20px; padding: 20px; }
+.grid-item { display: flex; flex-direction: column; align-items: center; padding: 10px; border-radius: 10px; transition: background 0.2s; cursor: pointer; }
+.grid-item:hover { background: rgba(0, 0, 0, 0.05); }
+
+/* --- 相册 Photo 样式 (修复版) --- */
+.photos-container { display: flex; width: 100%; height: 100%; background: #fff; overflow: hidden; }
+.photos-sidebar { width: 160px; background: #f6f6f6; border-right: 1px solid #e5e5e5; display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar-group { padding: 15px 15px 5px; font-size: 11px; font-weight: bold; color: #888; text-transform: uppercase; }
+.photos-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.photos-header { padding: 20px 25px; border-bottom: 1px solid #eee; }
+.photos-header h2 { margin: 0; font-size: 20px; font-weight: 600; }
+.photos-grid { flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); grid-auto-rows: 130px; gap: 10px; padding: 20px; overflow-y: auto; align-content: start; }
+.photo-card { width: 100%; height: 100%; border-radius: 4px; overflow: hidden; background: #eee; }
+.photo-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+.photo-card img:hover { transform: scale(1.05); }
+
+/* --- Safari 样式 --- */
+.safari-full-container { display: flex; flex-direction: column; width: 100%; height: 100%; background: white; }
+.safari-nav-bar { height: 44px; background: #f1f1f1; border-bottom: 1px solid #dcdcdc; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.address-capsule { background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 2px 30px; font-size: 13px; color: #5f6368; }
+.google-viewport { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.google-center-content { width: 100%; max-width: 584px; padding: 0 20px; text-align: center; transform: translateY(-10%); }
+.google-branding { font-size: 80px; font-weight: 500; margin-bottom: 30px; font-family: Arial, sans-serif; }
+.google-search-input-field { display: flex; align-items: center; height: 46px; border: 1px solid #dfe1e5; border-radius: 24px; padding: 0 15px; transition: box-shadow 0.2s; }
+.google-search-input-field:hover, .google-search-input-field:focus-within { box-shadow: 0 1px 6px rgba(32,33,36,0.28); }
+.google-search-input-field input { flex: 1; border: none; outline: none; font-size: 16px; padding: 0 10px; background: transparent; }
+.google-action-btns button { background: #f8f9fa; border: 1px solid #f8f9fa; border-radius: 4px; color: #3c4043; margin: 20px 4px; padding: 0 16px; height: 36px; cursor: pointer; }
+
+/* --- 全屏图片查看器样式 --- */
+.mac-image-viewer { position: fixed; inset: 0; z-index: 99999; display: none; justify-content: center; align-items: center; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(20px); opacity: 0; transition: opacity 0.3s ease; }
+.mac-image-viewer.active { display: flex; opacity: 1; }
+.mac-viewer-overlay { position: absolute; inset: 0; cursor: zoom-out; }
+#mac-viewer-img { max-width: 85%; max-height: 80%; object-fit: contain; border-radius: 10px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); z-index: 10; transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s; }
+.mac-image-viewer.active #mac-viewer-img { transform: scale(1); }
+.mac-viewer-toolbar { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); background: rgba(45, 45, 45, 0.7); backdrop-filter: blur(15px); border: 0.5px solid rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 8px 15px; display: flex; align-items: center; gap: 15px; color: white; z-index: 20; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+.mac-viewer-toolbar button { background: none; border: none; color: white; font-size: 18px; cursor: pointer; padding: 5px 10px; border-radius: 6px; }
+.mac-viewer-toolbar button:hover { background: rgba(255,255,255,0.1); }
+.toolbar-divider { width: 1px; height: 20px; background: rgba(255,255,255,0.2); }
+#mac-viewer-counter { font-size: 13px; font-family: system-ui; min-width: 45px; text-align: center; }
+
+/* 滚动条美化 */
+:global(.window-body::-webkit-scrollbar), :global(.content-grid::-webkit-scrollbar), :global(.photos-grid::-webkit-scrollbar) { width: 6px !important; height: 6px !important; }
+:global(.window-body::-webkit-scrollbar-thumb), :global(.content-grid::-webkit-scrollbar-thumb), :global(.photos-grid::-webkit-scrollbar-thumb) { background-color: rgba(0, 0, 0, 0.2) !important; border-radius: 10px !important; }
+
+/* Markdown 样式补丁 */
+.markdown-body img { max-width: 100%; height: auto; border-radius: 8px; margin: 20px 0; display: block; box-shadow: 0 4px 12px rgba(0,0,0,0.1); cursor: zoom-in; }
+/* 使用 :global 确保样式能穿透到 Markdown 渲染出的 HTML 中 */
+
+/* 垂直居中的魔法区域 */
+.google-viewport {
+  flex: 1;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.dock-item:hover {
-  transform: scale(1.3) translateY(-10px); /* 向上浮动并放大 */
-}
-
-/* 正在运行的小圆点指示灯 */
-.dock-item.active::after {
-  content: '';
-  position: absolute;
-  bottom: -8px;
-  width: 4px;
-  height: 4px;
-  background: rgba(0, 0, 0, 0.6); /* 黑色小圆点 */
-  border-radius: 50%;
-}
-/* 找一下你的桌面最外层 div 的类名，比如 .os-container 或 .desktop */
-.os-container {
-  -webkit-user-select: none; /* Safari */
-  -ms-user-select: none;      /* IE */
-  user-select: none;          /* 标准 */
-}
-
-/* 唯独允许博文窗口里的正文可以被选中（方便以后复制文字） */
-.post-window-content {
-  user-select: text !important;
-  -webkit-user-select: text !important;
-}
-/* 给所有可点击的项目统一加小手 */
-
-/* 1. 顶栏的菜单项 */
-.menu-item, .clock {
-  cursor: pointer;
-}
-
-/* 2. Dock 栏的图标 */
-.dock-item {
-  cursor: pointer;
-}
-/* 1. 确保文章图标整体和内部所有东西（图标、文字）都是小手 */
-.post-item, 
-.post-item * { 
-  cursor: pointer !important; 
-}
-
-/* 2. 确保侧边栏分类也是小手 */
-.sidebar-item, 
-.sidebar-item * {
-  cursor: pointer !important;
-}
-
-/* 3. 顶栏菜单 */
-.menu-item {
-  cursor: pointer !important;
-}
-
-/* 4. 排除搜索输入框（输入框必须维持竖杠，否则很难看） */
-#finder-search {
-  cursor: text !important;
-}
-.top-bar {
-  user-select: none !important;
-  -webkit-user-select: none !important;
-  -ms-user-select: none !important;
-  -moz-user-select: none !important;
-  cursor: default !important; /* 顶栏背景维持标准箭头 */
-}
-/* 凡是有关闭、打开、切换功能的按钮，统统显示小手 */
-[onclick], 
-button, 
-.drag-handle {
-  cursor: pointer;
-}
-
-/* 但是，拖拽区域如果正在拖拽，建议维持原样或用 grabbing */
-.app-window.dragging {
-  cursor: grabbing;
-}
-/* 禁止选中顶栏文字 */
-.top-bar {
-  user-select: none;         /* 现代浏览器 */
-  -webkit-user-select: none;  /* Safari/Chrome */
-  cursor: default;           /* 确保鼠标在顶栏是默认箭头 */
-}
-body {
-  cursor: default; /* 全局默认是箭头 */
-  margin: 0;
+  align-items: center; /* 关键：垂直居中 */
+  justify-content: center; /* 关键：水平居中 */
   overflow: hidden;
 }
-/* 如果你也想让整个桌面背景都不能选文字，可以加给桌面的容器 */
-.desktop-container {
-  user-select: none;
-  -webkit-user-select: none;
-}
-/* 让分类文字小一点，灰一点，更有科技感 */
-  .file-category {
-    font-size: 10px;
-    color: #999;
-    background: rgba(0,0,0,0.05);
-    border-radius: 4px;
-    padding: 1px 4px;
-    display: inline-block;
-    margin-top: 2px;
-  }
-  .view-mac {
-    height: 100vh; width: 100vw; overflow: hidden;
-    background: url('https://4kwallpapers.com/images/wallpapers/macos-sierra-glacier-mountains-snow-covered-alpenglow-3840x2160-6420.jpg') center/cover;
-    position: relative;
-  }
-  .mac-menubar {
-    height: 30px; background: rgba(255,255,255,0.1); backdrop-filter: blur(20px);
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 0 15px; color: white; font-size: 13px; z-index: 10000;
-  }
-  .window-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    display: none; z-index: 1000; pointer-events: none;
-  }
-  .window-overlay.active { display: block; } 
 
-  .app-window {
-    position: absolute;
-    width: 800px;
-    height: 500px;
-    background: white; border-radius: 12px; overflow: hidden;
-    display: flex; flex-direction: column; pointer-events: auto;
-    box-shadow: 0 30px 100px rgba(0,0,0,0.5);
-    /* 打开时的动画，拖拽时会通过 JS 移除 transition */
-    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
-    transform: scale(0.95); opacity: 0;
-  }
-  
-  /* 强制全屏样式，增加优先级 */
-  .view-mac .app-window.is-fullscreen {
-    width: 100vw !important;
-    height: calc(100vh - 30px) !important;
-    top: 30px !important;
-    left: 0 !important;
-    border-radius: 0 !important;
-    transform: none !important;
-    opacity: 1 !important;
-    z-index: 9999 !important;
-  }
-
-  .window-header { height: 40px; background: #f6f6f6; display: flex; align-items: center; padding: 0 15px; position: relative; }
-  /* 鼠标指在标题栏上时显示“准备抓取的手” */
-.drag-handle {
-  cursor: grab !important;
+.google-center-content {
+  width: 100%;
+  max-width: 584px;
+  padding: 0 20px;
+  text-align: center;
+  /* 视觉修正：稍微向上偏移 10% 看起来更像真的 Google */
+  transform: translateY(-10%); 
 }
 
-/* 正在拖拽时显示“抓紧的手” */
-.app-window:active, .icon-unit:active {
-  cursor: grabbing !important;
-}
-  .dot-group { display: flex; gap: 8px; z-index: 5; }
-  .dot { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
-  .dot-red { background: #ff5f56; } .dot-yellow { background: #ffbd2e; } .dot-green { background: #27c93f; }
-  .window-title { position: absolute; width: 100%; text-align: center; color: #666; font-size: 13px; font-weight: 600; pointer-events: none; left: 0; }
-
-  /* Dock 样式 */
-  .mac-dock-container { position: absolute; bottom: 10px; width: 100%; display: flex; justify-content: center; pointer-events: none; }
-  .mac-dock { background: rgba(255,255,255,0.2); backdrop-filter: blur(20px); padding: 8px; border-radius: 20px; display: flex; gap: 10px; align-items: center; pointer-events: auto; }
-  .dock-item { width: 50px; height: 50px; background: white; border-radius: 12px; font-size: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-  .dock-divider { width: 1px; height: 35px; background: rgba(255,255,255,0.3); display: none; margin: 0 5px; }
-  .min-zone { display: flex; gap: 10px; }
-  
-  /* 列表样式 */
-  .desktop-icons { padding: 60px 30px; }
-  .icon-unit { display: flex; flex-direction: column; align-items: center; width: 80px; position: absolute; }
-  .folder-icon { font-size: 50px; }
-  .icon-label { color: white; font-size: 12px; margin-top: 5px; text-shadow: 0 1px 3px #000; }
-  .finder-layout { user-select: none; display: flex; flex: 1; height: 100%; }
-  .sidebar { width: 160px; background: #f0f0f0; padding: 15px; }
-  .content-grid { flex: 1; padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, 80px); gap: 20px; }
-  .grid-item { text-align: center; cursor: pointer; }
-  .file-icon { font-size: 40px; }
-  .file-name { font-size: 11px; margin-top: 5px; }
-  .post-content { user-select: text !important; padding: 40px; overflow-y: auto; background: white; }
-  /* 侧边栏容器：增加内边距 */
-.sidebar {
-  padding: 12px 8px; /* 侧边整体留白 */
-  background: rgba(255, 255, 255, 0.4); /* 半透明磨砂感 */
-  backdrop-filter: blur(10px);
+.google-branding {
+  font-size: 80px;
+  font-weight: 500;
+  margin-bottom: 30px;
+  font-family: Arial, sans-serif;
 }
 
-/* 侧边栏标签（分类名）样式 */
-.sidebar-item {
-  padding: 8px 12px;
-  margin: 4px 0; /* 增加上下间距，不再拥挤 */
-  border-radius: 8px; /* 苹果风格的圆角 */
+.google-search-input-field {
+  display: flex;
+  align-items: center;
+  height: 46px;
+  border: 1px solid #dfe1e5;
+  border-radius: 24px;
+  padding: 0 15px;
+  transition: box-shadow 0.2s;
+}
+
+.google-search-input-field:hover,
+.google-search-input-field:focus-within {
+  box-shadow: 0 1px 6px rgba(32,33,36,0.28);
+  border-color: rgba(223,225,229,0);
+}
+
+.google-search-input-field input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  padding: 0 10px;
+  background: transparent;
+}
+
+.google-action-btns button {
+  background: #f8f9fa;
+  border: 1px solid #f8f9fa;
+  border-radius: 4px;
+  color: #3c4043;
+  margin: 20px 4px;
+  padding: 0 16px;
+  height: 36px;
+  font-size: 14px;
   cursor: pointer;
-  font-size: 13px;
-  color: #333;
-  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1); /* 丝滑过渡 */
-  display: flex;
-  align-items: center;
-  gap: 8px; /* 图标和文字的间距 */
 }
-
-/* 鼠标悬浮效果 */
-.sidebar-item:hover {
-  background: rgba(0, 0, 0, 0.05);
-}
-
-/* 点击/激活状态：苹果经典蓝色 */
-.sidebar-item.active {
-  background: linear-gradient(180deg, #007AFF 0%, #0056B3 100%);
-  color: white;
-  box-shadow: 0 2px 4px rgba(0, 122, 255, 0.3);
-}
-
-/* 分类标签的文字稍微变细一点，更有高级感 */
-.sidebar-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: #8e8e93;
-  padding: 10px 12px 4px;
-  text-transform: uppercase; /* 英文分类会变大写，更有设计感 */
-}
-.content-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 20px; /* 增加文件图标之间的间距 */
-  padding: 20px;
-}
-
-.grid-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 10px;
-  border-radius: 10px;
-  transition: background 0.2s;
-}
-
-.grid-item:hover {
-  background: rgba(0, 0, 0, 0.05); /* 鼠标移上去有个浅色底 */
-}
-.mac-image-viewer {
-    position: fixed; inset: 0; z-index: 99999;
-    display: none; justify-content: center; align-items: center;
-    background: rgba(0, 0, 0, 0.3); /* 较浅的遮罩，靠模糊出效果 */
-    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    opacity: 0; transition: opacity 0.3s ease;
-  }
-  .mac-image-viewer.active { display: flex; opacity: 1; }
-
-  .mac-viewer-overlay { position: absolute; inset: 0; cursor: zoom-out; }
-
-  #mac-viewer-img {
-    max-width: 85%; max-height: 80%;
-    object-fit: contain; border-radius: 10px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    z-index: 10; transform: scale(0.95);
-    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
-  }
-  .mac-image-viewer.active #mac-viewer-img { transform: scale(1); }
-
-  /* 悬浮工具栏 */
-  .mac-viewer-toolbar {
-    position: absolute; bottom: 40px; left: 50%;
-    transform: translateX(-50%);
-    background: rgba(45, 45, 45, 0.7);
-    backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-    border: 0.5px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px; padding: 8px 15px;
-    display: flex; align-items: center; gap: 15px;
-    color: white; z-index: 20;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-  }
-
-  .mac-viewer-toolbar button {
-    background: none; border: none; color: white;
-    font-size: 18px; cursor: pointer; padding: 5px 10px;
-    border-radius: 6px; transition: background 0.2s;
-  }
-  .mac-viewer-toolbar button:hover { background: rgba(255,255,255,0.1); }
-  
-  .toolbar-divider { width: 1px; height: 20px; background: rgba(255,255,255,0.2); }
-  
-  #mac-viewer-counter { font-size: 13px; font-family: system-ui; min-width: 45px; text-align: center; }
 </style>
 
 <script is:inline>
-// --- 1. 全局变量定义 ---
+// --- 1. 全局变量 ---
 let windowCount = 0;
 let highestZIndex = 1000;
 const WIN_W = 800;
 const WIN_H = 500;
 const STEP = 30;
 
-// Mac 图片预览状态
 let macAlbum = [];
 let macIndex = 0;
 
-// --- 2. 置顶逻辑 ---
+// --- 2. 窗口管理 ---
 function bringToFront(el) {
   if (!el) return;
   highestZIndex++;
   el.style.zIndex = highestZIndex;
 }
 
-// --- 3. 窗口控制 ---
 function openWin(id) {
   const el = document.getElementById(id);
-  if (!el) return;
+  if (!el) {
+    console.warn('Window not found:', id);
+    return;
+  }
   const win = el.querySelector('.app-window');
-
+  
+  // Dock 激活状态
   document.querySelectorAll('.dock-item').forEach(item => {
-    if (item.getAttribute('onclick')?.includes(id)) {
-      item.classList.add('active');
-    }
+    if (item.getAttribute('onclick')?.includes(id)) item.classList.add('active');
   });
 
+  // 初次打开定位
   if (el.style.display === 'none' || el.style.display === '') {
     const screenW = window.innerWidth;
     const screenH = window.innerHeight;
@@ -532,7 +439,7 @@ function openWin(id) {
     win.style.top = (top + offset) + 'px';
     win.style.margin = "0"; 
     el.style.display = 'block';
-    windowCount++; 
+    windowCount++;
   }
 
   setTimeout(() => {
@@ -540,7 +447,7 @@ function openWin(id) {
     win.style.transform = "scale(1)";
     win.style.opacity = "1";
   }, 10);
-
+  
   bringToFront(el);
   const dIcon = document.getElementById('d-icon-' + id);
   if (dIcon) dIcon.remove();
@@ -552,11 +459,11 @@ function closeWin(id) {
   const win = el.querySelector('.app-window');
   win.style.transform = "scale(0.9)";
   win.style.opacity = "0";
+  
   document.querySelectorAll('.dock-item').forEach(item => {
-    if (item.getAttribute('onclick')?.includes(id)) {
-      item.classList.remove('active');
-    }
+    if (item.getAttribute('onclick')?.includes(id)) item.classList.remove('active');
   });
+
   setTimeout(() => {
     el.classList.remove('active');
     el.style.display = 'none';
@@ -568,13 +475,14 @@ function minWin(id, emoji) {
   const win = el.querySelector('.app-window');
   win.style.transform = "scale(0.1) translateY(1000px)";
   win.style.opacity = "0";
+  
   setTimeout(() => {
     el.style.display = 'none';
     if (!document.getElementById('d-icon-' + id)) {
       const zone = document.getElementById('min-zone');
       const icon = document.createElement('div');
       icon.id = 'd-icon-' + id;
-      icon.className = 'dock-item';
+      icon.className = 'dock-item animated-min'; 
       icon.innerHTML = emoji;
       icon.onclick = () => openWin(id);
       zone.appendChild(icon);
@@ -594,19 +502,140 @@ function updateDockDivider() {
   if (divider) divider.style.display = zone.children.length > 0 ? "block" : "none";
 }
 
-// --- 4. 电脑端图片预览 (核心匹配：markdown-body) ---
-document.addEventListener('click', function(e) {
-  // 关键：匹配你 HTML 里的 .markdown-body 或其他可能的容器
-  const container = e.target.closest('.markdown-body') || e.target.closest('.post-content');
+// --- 3. 拖拽逻辑 ---
+let dragObj = null;
+let startMouseX, startMouseY, startObjX, startObjY;
+document.addEventListener('mousedown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  const handle = e.target.closest('.drag-handle');
+  if (!handle) return;
+  const target = handle.closest('.app-window') || handle.closest('.icon-unit');
+  if (!target || target.classList.contains('is-fullscreen')) return;
   
-  if (e.target.tagName === 'IMG' && container) {
-    // 过滤掉太小的图标
-    if (e.target.naturalWidth < 50 && e.target.width < 50) return;
+  dragObj = target;
+  dragObj.style.transition = 'none'; 
+  const overlay = dragObj.closest('.window-overlay'); // Window wrapper
+  if (overlay) bringToFront(overlay); // Use bringToFront on wrapper
+  
+  startMouseX = e.clientX;
+  startMouseY = e.clientY;
+  startObjX = dragObj.offsetLeft;
+  startObjY = dragObj.offsetTop;
+  e.preventDefault(); 
+});
+document.addEventListener('mousemove', (e) => {
+  if (!dragObj) return;
+  dragObj.style.left = (startObjX + (e.clientX - startMouseX)) + 'px';
+  dragObj.style.top = (startObjY + (e.clientY - startMouseY)) + 'px';
+  dragObj.style.margin = "0"; 
+});
+document.addEventListener('mouseup', () => {
+  if (dragObj) {
+    if (dragObj.classList.contains('app-window')) {
+      dragObj.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s';
+    }
+    dragObj = null;
+  }
+});
 
+// --- 4. 辅助功能 ---
+// 时钟
+setInterval(() => {
+  const clock = document.getElementById('mac-clock');
+  if (clock) {
+    const now = new Date();
+    clock.innerText = now.toLocaleString('zh-CN', {
+      year:'numeric', month:'short', day:'numeric', weekday:'short', 
+      hour:'2-digit', minute:'2-digit', hour12:false
+    }).replace(/\//g,'年');
+  }
+}, 1000);
+
+// 搜索联动
+document.addEventListener('keydown', function(e) {
+  if (e.target.id === 'google-search-input' && e.key === 'Enter') {
+    const keyword = e.target.value.trim();
+    if (!keyword) return;
+    const finderSearch = document.getElementById('finder-search');
+    if (finderSearch) finderSearch.value = keyword;
+    if (window.filterPosts) window.filterPosts();
+    window.openWin('mac-finder');
+    e.target.value = "";
+  }
+});
+
+// 访达过滤
+let currentCategory = 'all';
+window.filterByCategory = function(cat, el) {
+  currentCategory = cat;
+  document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+  el.classList.add('active');
+  window.filterPosts();
+};
+
+window.filterPosts = function() {
+  const query = document.getElementById('finder-search')?.value.toLowerCase() || "";
+  const items = document.querySelectorAll('.post-item');
+  items.forEach(item => {
+    const title = item.querySelector('.file-name').innerText.toLowerCase();
+    const category = item.querySelector('.file-category').innerText;
+    const matchCategory = (currentCategory === 'all' || category === currentCategory);
+    const matchSearch = title.includes(query);
+    item.style.display = (matchCategory && matchSearch) ? 'flex' : 'none';
+  });
+};
+
+// --- 5. 相册侧边栏自动生成逻辑 (已修复 ID 获取问题) ---
+(function() {
+  window.initPhotoNavigation = function() {
+    const list = document.getElementById('photos-post-links');
+    if (!list) return;
+
+    // 找到所有摄影类博文窗口内部
+    const postWindows = document.querySelectorAll('.app-window[data-category="摄影"]:not(#mac-photos)');
+    
+    if (postWindows.length === 0) {
+      list.innerHTML = '<div class="sidebar-item" style="opacity:0.5">暂无摄影集</div>';
+      return;
+    }
+
+    list.innerHTML = Array.from(postWindows).map(win => {
+      const title = win.querySelector('.window-title')?.innerText || "未命名博文";
+      
+      // 【核心修复】：ID 挂在 .app-window 的父级元素上，不在这里
+      // 如果你的 Window 组件是 <div id="slug"><div class="app-window">...</div></div>
+      const winId = win.parentElement ? win.parentElement.id : "";
+      
+      if (!winId) return "";
+
+      // 使用 openWin 触发完整的开窗动画和 Dock 状态
+      return `
+        <div class="sidebar-item" onclick="openWin('${winId}')">
+          📁 ${title}
+        </div>
+      `;
+    }).join('');
+  };
+
+  const observer = new MutationObserver(() => {
+    const win = document.getElementById('mac-photos');
+    if (win && win.style.display !== 'none') {
+      window.initPhotoNavigation();
+    }
+  });
+
+  const photoWin = document.getElementById('mac-photos');
+  if (photoWin) observer.observe(photoWin, { attributes: true });
+})();
+
+// --- 6. 图片预览器逻辑 ---
+document.addEventListener('click', function(e) {
+  const container = e.target.closest('.markdown-body') || e.target.closest('.post-content');
+  if (e.target.tagName === 'IMG' && container) {
+    if (e.target.naturalWidth < 50 && e.target.width < 50) return;
     const imgs = Array.from(container.querySelectorAll('img'));
     macAlbum = imgs.map(img => img.src);
     macIndex = macAlbum.indexOf(e.target.src);
-    
     openMacViewer();
   }
 });
@@ -614,10 +643,7 @@ document.addEventListener('click', function(e) {
 function openMacViewer() {
   const v = document.getElementById('mac-image-viewer');
   if (!v) return;
-  
-  // 确保预览器始终在访达窗口之上
   v.style.zIndex = 100000; 
-  
   updateMacUI();
   v.style.display = 'flex';
   setTimeout(() => v.classList.add('active'), 10);
@@ -658,76 +684,7 @@ function handleMacKeyDown(e) {
   }
 }
 
-// --- 5. 拖拽引擎 ---
-let dragObj = null;
-let startMouseX, startMouseY, startObjX, startObjY;
-
-document.addEventListener('mousedown', (e) => {
-  if (e.target.tagName === 'INPUT') return;
-  const handle = e.target.closest('.drag-handle');
-  if (!handle) return;
-  const target = handle.closest('.app-window') || handle.closest('.icon-unit');
-  if (!target || target.classList.contains('is-fullscreen')) return;
-  dragObj = target;
-  dragObj.style.transition = 'none'; 
-  const overlay = dragObj.closest('.window-overlay');
-  if (overlay) bringToFront(overlay);
-  startMouseX = e.clientX;
-  startMouseY = e.clientY;
-  startObjX = dragObj.offsetLeft;
-  startObjY = dragObj.offsetTop;
-  e.preventDefault(); 
-});
-
-document.addEventListener('mousemove', (e) => {
-  if (!dragObj) return;
-  dragObj.style.left = (startObjX + (e.clientX - startMouseX)) + 'px';
-  dragObj.style.top = (startObjY + (e.clientY - startMouseY)) + 'px';
-  dragObj.style.margin = "0"; 
-});
-
-document.addEventListener('mouseup', () => {
-  if (dragObj) {
-    if (dragObj.classList.contains('app-window')) {
-      dragObj.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s';
-    }
-    dragObj = null;
-  }
-});
-
-// --- 6. 辅助功能 (时钟与过滤) ---
-setInterval(() => {
-  const clock = document.getElementById('mac-clock');
-  if (clock) {
-    const now = new Date();
-    clock.innerText = now.toLocaleString('zh-CN', {
-      year:'numeric', month:'short', day:'numeric', weekday:'short', 
-      hour:'2-digit', minute:'2-digit', hour12:false
-    }).replace(/\//g,'年');
-  }
-}, 1000);
-
-let currentCategory = 'all';
-window.filterByCategory = function(cat, el) {
-  currentCategory = cat;
-  document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
-  el.classList.add('active');
-  filterPosts();
-};
-
-window.filterPosts = function() {
-  const query = document.getElementById('finder-search')?.value.toLowerCase() || "";
-  const items = document.querySelectorAll('.post-item');
-  items.forEach(item => {
-    const title = item.querySelector('.file-name').innerText.toLowerCase();
-    const category = item.querySelector('.file-category').innerText;
-    const matchCategory = (currentCategory === 'all' || category === currentCategory);
-    const matchSearch = title.includes(query);
-    item.style.display = (matchCategory && matchSearch) ? 'flex' : 'none';
-  });
-};
-
-// 暴露函数给全局
+// 暴露给全局
 window.openWin = openWin;
 window.closeWin = closeWin;
 window.minWin = minWin;
