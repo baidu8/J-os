@@ -218,7 +218,15 @@ const getCategoryIcon = (cat) => {
     </div>
   </div>
 </div>
-
+<div id="iphone-image-viewer" class="iphone-image-viewer">
+  <div class="iphone-viewer-overlay" onclick="closeIphoneImageViewer()"></div>
+  
+  <img id="iphone-viewer-img" src="" alt="预览图片" onclick="handleIphoneImageClick(event)" />
+  
+  <div id="iphone-viewer-counter" class="iphone-viewer-counter">1 / 1</div>
+  
+  <div class="iphone-viewer-hint">点击两侧切换，点击背景关闭</div>
+</div>
 <style>
 .iphone-article {
   padding: 20px;
@@ -503,152 +511,211 @@ iframe {
   .iphone-dock { width: 90%; height: 80px; border-radius: 25px; display: flex; justify-content: space-around; align-items: center; }
   .dock-app { width: 55px; height: 55px; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 28px; }
   
+  .iphone-image-viewer {
+    position: fixed; inset: 0; z-index: 9999;
+    display: none; justify-content: center; align-items: center;
+    background: rgba(0, 0, 0, 0.95); /* 手机端背景更深一点，专注内容 */
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    opacity: 0; transition: opacity 0.3s ease;
+  }
+  .iphone-image-viewer.active { display: flex; opacity: 1; }
+
+.iphone-viewer-img {
+  max-width: 95%;
+  max-height: 80%;
+  object-fit: contain;
+  z-index: 100; /* 确保在遮罩层之上 */
+  position: relative;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  user-select: none; /* 防止长按弹出菜单干扰滑动 */
+  -webkit-user-drag: none;
+}
+
+/* 确保遮罩层不拦截图片的点击 */
+.iphone-viewer-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50; /* 低于图片 */
+  background: transparent; /* 或者你之前的深色背景 */
+}
+  .iphone-image-viewer.active #iphone-viewer-img { transform: scale(1); }
+
+  .iphone-viewer-counter {
+    position: absolute; top: env(safe-area-inset-top, 20px); /* 避开手机刘海 */
+    color: white; background: rgba(255,255,255,0.1);
+    padding: 4px 12px; border-radius: 20px; font-size: 12px; z-index: 20;
+  }
+
+  .iphone-viewer-hint {
+    position: absolute; bottom: calc(40px + env(safe-area-inset-bottom));
+    color: rgba(255,255,255,0.4); font-size: 12px; z-index: 20;
+  }
 </style>
 
 <script is:inline>
-/**
- * 修复：点击弹窗内的分类标签
- * @param {string} cat - 分类名称 ('all' 或具体的分类名)
- * @param {HTMLElement} el - 被点击的 DOM 元素
- */
-window.filterIphoneByCategory = function(cat, el) {
-    console.log("切换内部分类到:", cat);
-    
-    // 1. 更新全局变量，确保搜索过滤逻辑也使用这个分类
-    currentIphoneCategory = cat;
-    
-    // 2. 切换 UI 激活状态
-    // 先移除所有分类项的 active 类
-    document.querySelectorAll('.iphone-cat-item').forEach(item => {
-        item.classList.remove('active');
-    });
-    // 给当前点击的项加上 active 类
+  /**
+   * J-OS iPhone 核心逻辑整合版 (包含滑动与点击切换)
+   */
+
+  // --- 1. 全局变量 ---
+  let currentIphoneCategory = 'all';
+  let iphoneAlbum = [];
+  let iphoneIndex = 0;
+  let touchStartX = 0;
+  let touchEndX = 0;
+
+  // --- 2. 窗口管理 ---
+  window.openIphoneWin = function(id) {
+    const el = document.getElementById(id);
     if (el) {
-        el.classList.add('active');
-    } else {
-        // 如果是从桌面点击进来的，没有 el，我们要根据文字找一下
-        document.querySelectorAll('.iphone-cat-item').forEach(item => {
-            if (item.innerText === cat || (cat === 'all' && item.innerText === '全部')) {
-                item.classList.add('active');
-            }
-        });
-    }
-
-    // 3. 执行真正的列表过滤
-    window.filterIphonePosts();
-};
-// --- J-OS 核心交互逻辑全量包 ---
-
-// 1. 全局状态管理
-let currentIphoneCategory = 'all';
-
-/**
- * 2. 窗口操作：打开
- * @param {string} id - 窗口的 DOM ID
- */
-window.openIphoneWin = function(id) {
-  const el = document.getElementById(id);
-  if (el) {
-    el.classList.add('active');
-    // 窗口打开时，状态栏文字变黑（适应白色背景弹窗）
-    const statusbar = document.querySelector('.iphone-statusbar');
-    if (statusbar) statusbar.style.color = '#000';
-  }
-};
-
-/**
- * 3. 窗口操作：关闭
- * @param {string} id - 窗口的 DOM ID
- */
-window.closeIphoneWin = function(id) {
-  const el = document.getElementById(id);
-  if (el) {
-    el.classList.remove('active');
-    // 如果没有打开的窗口了，状态栏恢复白色（适应深色桌面背景）
-    const activeWins = document.querySelectorAll('.iphone-window.active');
-    if (activeWins.length === 0) {
+      el.classList.add('active');
       const statusbar = document.querySelector('.iphone-statusbar');
-      if (statusbar) statusbar.style.color = '#fff';
+      if (statusbar) statusbar.style.color = '#000';
+    }
+  };
+
+  window.closeIphoneWin = function(id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.remove('active');
+      const activeWins = document.querySelectorAll('.iphone-window.active');
+      if (activeWins.length === 0) {
+        const statusbar = document.querySelector('.iphone-statusbar');
+        if (statusbar) statusbar.style.color = '#fff';
+      }
+    }
+  };
+
+  // --- 3. 过滤与搜索 ---
+  window.filterIphoneByCategory = function(cat, el) {
+    currentIphoneCategory = cat;
+    document.querySelectorAll('.iphone-cat-item').forEach(item => item.classList.remove('active'));
+    if (el) el.classList.add('active');
+    window.filterIphonePosts();
+  };
+
+  window.openCategory = function(catName) {
+    currentIphoneCategory = catName;
+    window.filterIphonePosts();
+    document.querySelectorAll('.iphone-cat-item').forEach(item => {
+      item.classList.toggle('active', item.innerText === catName);
+    });
+    window.openIphoneWin('iphone-folder'); 
+  };
+
+  window.filterIphonePosts = function() {
+    const query = document.getElementById('iphone-finder-search')?.value.toLowerCase().trim() || "";
+    const items = document.querySelectorAll('#iphone-post-list .iphone-list-item');
+    items.forEach(item => {
+      const title = item.querySelector('.item-title')?.innerText.toLowerCase() || "";
+      const cat = item.getAttribute('data-category') || "";
+      const match = (currentIphoneCategory === 'all' || cat === currentIphoneCategory) && title.includes(query);
+      item.style.display = match ? 'flex' : 'none';
+    });
+  };
+
+  // --- 4. 图片预览逻辑 (含滑动 + 点击) ---
+  
+  // 监听正文图片点击开启预览
+  document.addEventListener('click', function(e) {
+    const article = e.target.closest('.iphone-article');
+    const photos = e.target.closest('.photo-grid');
+    
+    if (e.target.tagName === 'IMG' && (article || photos)) {
+      const container = article || photos;
+      const imgs = Array.from(container.querySelectorAll('img'));
+      iphoneAlbum = imgs.map(img => img.src);
+      iphoneIndex = iphoneAlbum.indexOf(e.target.src);
+      showIphoneViewer();
+    }
+  });
+
+  function showIphoneViewer() {
+    const v = document.getElementById('iphone-image-viewer');
+    if (!v) return;
+    updateIphoneUI();
+    v.style.display = 'flex';
+    setTimeout(() => v.classList.add('active'), 10);
+    initSwipeListener(); // 初始化滑动监听
+  }
+
+  function updateIphoneUI() {
+    const img = document.getElementById('iphone-viewer-img');
+    const counter = document.getElementById('iphone-viewer-counter');
+    if (img) img.src = iphoneAlbum[iphoneIndex];
+    if (counter) counter.innerText = `${iphoneIndex + 1} / ${iphoneAlbum.length}`;
+  }
+
+  // 点击区域判定切换
+  window.handleIphoneImageClick = function(e) {
+    e.stopPropagation(); // 防止触发背景关闭
+    if (iphoneAlbum.length <= 1) {
+      closeIphoneImageViewer();
+      return;
+    }
+
+    const rect = e.target.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const width = rect.width;
+
+    if (x < width * 0.35) {
+      changeIphoneImage(-1); // 点击左侧
+    } else if (x > width * 0.65) {
+      changeIphoneImage(1);  // 点击右侧
+    } else {
+      closeIphoneImageViewer(); // 点击中间关闭
+    }
+  };
+
+  // 滑动切换逻辑
+  function initSwipeListener() {
+    const img = document.getElementById('iphone-viewer-img');
+    if (!img || img.dataset.swipeLinked) return;
+
+    img.addEventListener('touchstart', e => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, {passive: true});
+
+    img.addEventListener('touchend', e => {
+      touchEndX = e.changedTouches[0].screenX;
+      const diff = touchStartX - touchEndX;
+      if (Math.abs(diff) > 50) { // 滑动阈值
+        changeIphoneImage(diff > 0 ? 1 : -1);
+      }
+    }, {passive: true});
+
+    img.dataset.swipeLinked = "true"; // 防止重复绑定
+  }
+
+  window.changeIphoneImage = function(step) {
+    iphoneIndex = (iphoneIndex + step + iphoneAlbum.length) % iphoneAlbum.length;
+    const img = document.getElementById('iphone-viewer-img');
+    if (img) {
+      img.style.opacity = '0';
+      setTimeout(() => {
+        updateIphoneUI();
+        img.style.opacity = '1';
+      }, 150);
+    }
+  };
+
+  window.closeIphoneImageViewer = function() {
+    const v = document.getElementById('iphone-image-viewer');
+    if (v) {
+      v.classList.remove('active');
+      setTimeout(() => v.style.display = 'none', 300);
+    }
+  };
+
+  // --- 5. 辅助功能 ---
+  function updateIphoneClock() {
+    const clock = document.getElementById('iphone-clock');
+    if (clock) {
+      const now = new Date();
+      clock.innerText = now.getHours().toString().padStart(2, '0') + ':' + 
+                        now.getMinutes().toString().padStart(2, '0');
     }
   }
-};
-
-/**
- * 4. 核心功能：点击桌面分类图标
- * @param {string} catName - 分类名称
- */
-window.openCategory = function(catName) {
-  console.log("正在按分类过滤:", catName);
-  // 更新当前选中的分类
-  currentIphoneCategory = catName;
-  
-  // 执行列表过滤逻辑
-  window.filterIphonePosts();
-  
-  // 打开存放博文列表的弹窗
-  window.openIphoneWin('iphone-folder'); 
-};
-
-/**
- * 5. 核心逻辑：执行博文列表过滤
- * 联动 [搜索框内容] + [选中的分类]
- */
-window.filterIphonePosts = function() {
-  const searchInput = document.getElementById('iphone-finder-search');
-  const query = searchInput ? searchInput.value.toLowerCase().trim() : "";
-  
-  const items = document.querySelectorAll('#iphone-post-list .iphone-list-item');
-  
-  items.forEach(item => {
-    // 获取列表项中的标题和分类属性
-    const title = item.querySelector('.item-title')?.innerText.toLowerCase() || "";
-    const itemCategory = item.getAttribute('data-category') || "";
-    
-    // 逻辑判断：(分类匹配 OR 选的是全部) AND (标题包含关键词)
-    const matchCategory = (currentIphoneCategory === 'all' || itemCategory === currentIphoneCategory);
-    const matchSearch = title.includes(query);
-    
-    // 设置显示状态
-    item.style.display = (matchCategory && matchSearch) ? 'flex' : 'none';
-  });
-};
-
-/**
- * 6. 功能：Safari 百度搜索
- */
-window.doSafariSearch = function() {
-  const input = document.getElementById('safari-search-input');
-  const query = input ? input.value.trim() : "";
-  
-  if (query) {
-    // 在新窗口打开百度搜索
-    window.open(`https://www.baidu.com/s?wd=${encodeURIComponent(query)}`, '_blank');
-    // 自动重置搜索框
-    input.value = '';
-  }
-};
-
-/**
- * 7. 辅助：实时更新状态栏时钟
- */
-function updateIphoneClock() {
-  const clock = document.getElementById('iphone-clock');
-  if (clock) {
-    const now = new Date();
-    const hours = now.getHours().toString().padStart(2, '0');
-    const minutes = now.getMinutes().toString().padStart(2, '0');
-    clock.innerText = `${hours}:${minutes}`;
-  }
-}
-
-// 初始化执行
-setInterval(updateIphoneClock, 1000);
-updateIphoneClock();
-
-// 全局监听搜索框输入：实现打字时实时过滤
-document.addEventListener('input', (e) => {
-  if (e.target.id === 'iphone-finder-search') {
-    window.filterIphonePosts();
-  }
-});
+  setInterval(updateIphoneClock, 1000);
+  updateIphoneClock();
 </script>

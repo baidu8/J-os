@@ -93,6 +93,17 @@ const getCategoryIcon = (cat) => {
       </div>
     </div>
   ))}
+
+<div id="image-viewer" class="image-viewer">
+  <div class="viewer-overlay" onclick="closeImageViewer()"></div>
+  
+  <button class="viewer-prev" onclick="event.stopPropagation(); changeImage(-1)">❮</button>
+  
+  <img id="viewer-img" src="" alt="预览图片" onclick="handleImageClick(event)" />
+  
+  <button class="viewer-next" onclick="event.stopPropagation(); changeImage(1)">❯</button>
+  
+  <div id="viewer-counter" class="viewer-counter">1 / 1</div>
 </div>
 
 <style>
@@ -285,9 +296,131 @@ const getCategoryIcon = (cat) => {
   .article-meta { color: #888; margin-bottom: 30px; font-size: 16px; }
   .article-content { line-height: 1.8; font-size: 19px; color: #333; }
   .article-content :global(img) { max-width: 100%; border-radius: 12px; margin: 20px 0; }
+  .image-viewer {
+  position: fixed; inset: 0; z-index: 9999;
+  display: none; justify-content: center; align-items: center;
+  background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px); opacity: 0; transition: opacity 0.3s ease;
+}
+.image-viewer.active { display: flex; opacity: 1; }
+
+.viewer-overlay { position: absolute; inset: 0; cursor: zoom-out; z-index: 1; }
+
+.image-viewer img {
+  max-width: 90%; max-height: 90%; border-radius: 8px;
+  transform: scale(0.9); transition: transform 0.3s ease;
+  cursor: pointer; z-index: 10; position: relative;
+}
+.image-viewer.active img { transform: scale(1); }
+
+/* 移除之前的 .viewer-close-x 相关样式，替换为以下内容 */
+
+.viewer-prev, .viewer-next {
+  position: absolute; 
+  top: 50%; 
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.15); /* 增加半透明底色 */
+  backdrop-filter: blur(5px);
+  border: none; 
+  color: white;
+  width: 50px; 
+  height: 50px; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px; /* 圆角更像 iPad */
+  font-size: 24px; 
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 20;
+}
+
+.viewer-prev:hover, .viewer-next:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.viewer-prev { left: 30px; }
+.viewer-next { right: 30px; }
+
+/* 页码计数器位置微调，避免挡住图片 */
+.viewer-counter {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255,255,255,0.9);
+  background: rgba(0, 0, 0, 0.4);
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  z-index: 20;
+  letter-spacing: 1px;
+}
+.viewer-prev { left: 20px; top: 50%; transform: translateY(-50%); background: none; border: none; color: white; font-size: 40px; cursor: pointer; }
+.viewer-next { right: 20px; top: 50%; transform: translateY(-50%); background: none; border: none; color: white; font-size: 40px; cursor: pointer; }
+.viewer-counter { bottom: 40px; color: white; background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 14px; }
 </style>
 
 <script is:inline>
+let currentAlbum = [];
+  let currentIndex = 0;
+
+  // 初始化预览：点击正文图片
+  document.addEventListener('click', function(e) {
+    if (e.target.tagName === 'IMG' && e.target.closest('.article-content')) {
+      const article = e.target.closest('.article-content');
+      const imgs = Array.from(article.querySelectorAll('img'));
+      currentAlbum = imgs.map(img => img.src);
+      currentIndex = currentAlbum.indexOf(e.target.src);
+      
+      showViewer();
+    }
+  });
+
+  function showViewer() {
+    const viewer = document.getElementById('image-viewer');
+    updateViewerUI();
+    viewer.style.display = 'flex';
+    setTimeout(() => viewer.classList.add('active'), 10);
+  }
+
+  function updateViewerUI() {
+    document.getElementById('viewer-img').src = currentAlbum[currentIndex];
+    document.getElementById('viewer-counter').innerText = `${currentIndex + 1} / ${currentAlbum.length}`;
+    // 如果只有一张图，隐藏箭头
+    const showBtns = currentAlbum.length > 1 ? 'block' : 'none';
+    document.querySelector('.viewer-prev').style.display = showBtns;
+    document.querySelector('.viewer-next').style.display = showBtns;
+  }
+
+  // 点击图片的处理
+  window.handleImageClick = function(e) {
+    e.stopPropagation(); // 阻止触发底层的关闭
+    if (currentAlbum.length > 1) {
+      changeImage(1); // 多图则切下一张
+    } else {
+      closeImageViewer(); // 单图则直接关
+    }
+  };
+
+  window.changeImage = function(step) {
+    currentIndex = (currentIndex + step + currentAlbum.length) % currentAlbum.length;
+    const img = document.getElementById('viewer-img');
+    img.style.opacity = '0';
+    setTimeout(() => {
+      updateViewerUI();
+      img.style.opacity = '1';
+    }, 150);
+  };
+
+  window.closeImageViewer = function() {
+    const viewer = document.getElementById('image-viewer');
+    if (viewer) {
+      viewer.classList.remove('active');
+      setTimeout(() => { viewer.style.display = 'none'; }, 300);
+    }
+  };
   // 1. 新增：侧边栏折叠切换函数
   window.toggleIpadSidebar = function() {
     const wrapper = document.getElementById('ipad-main-wrapper');
