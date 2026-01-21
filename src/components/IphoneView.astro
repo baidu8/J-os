@@ -511,26 +511,38 @@ iframe {
   .iphone-dock { width: 90%; height: 80px; border-radius: 25px; display: flex; justify-content: space-around; align-items: center; }
   .dock-app { width: 55px; height: 55px; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 28px; }
   
-  .iphone-image-viewer {
-    position: fixed; inset: 0; z-index: 9999;
-    display: none; justify-content: center; align-items: center;
-    background: rgba(0, 0, 0, 0.95); /* 手机端背景更深一点，专注内容 */
-    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    opacity: 0; transition: opacity 0.3s ease;
-  }
+  /* 确保预览器在所有 IphoneWindow 之上 */
+.iphone-image-viewer {
+  position: fixed; 
+  inset: 0; 
+  z-index: 99999; /* 必须大于窗口的 5000 */
+  display: none; 
+  justify-content: center; 
+  align-items: center;
+  background: rgba(0, 0, 0, 1); /* 真机全黑背景更稳 */
+  opacity: 0; 
+  transition: opacity 0.3s ease;
+}
   .iphone-image-viewer.active { display: flex; opacity: 1; }
 
 .iphone-viewer-img {
-  max-width: 95%;
+max-width: 95%;
   max-height: 80%;
   object-fit: contain;
-  z-index: 100; /* 确保在遮罩层之上 */
+  z-index: 100;
   position: relative;
-  transition: transform 0.3s ease, opacity 0.3s ease;
-  user-select: none; /* 防止长按弹出菜单干扰滑动 */
+  /* 核心修复：禁用浏览器默认手势，防止跟 JS 冲突 */
+  touch-action: none; 
+  -webkit-user-select: none;
+  user-select: none;
   -webkit-user-drag: none;
+  /* 确保点击能穿过不必要的容器 */
+  pointer-events: auto;
 }
-
+/* 确保计数器和文字不会挡住点击 */
+.iphone-viewer-counter, .iphone-viewer-hint {
+  pointer-events: none;
+}
 /* 确保遮罩层不拦截图片的点击 */
 .iphone-viewer-overlay {
   position: absolute;
@@ -538,8 +550,23 @@ iframe {
   z-index: 50; /* 低于图片 */
   background: transparent; /* 或者你之前的深色背景 */
 }
-  .iphone-image-viewer.active #iphone-viewer-img { transform: scale(1); }
+  #iphone-viewer-img {
+  max-width: 95%;
+  max-height: 80%;
+  object-fit: contain;
+  z-index: 100000;
+  /* 基础状态：稍微缩小一点 */
+  transform: scale(0.9); 
+  /* 关键：增加过渡时间，动画才会生效 */
+  transition: transform 0.3s cubic-bezier(0.2, 0, 0.2, 1), opacity 0.3s ease;
+  opacity: 0;
+}
 
+/* 激活状态：放大并显示 */
+.iphone-image-viewer.active #iphone-viewer-img {
+  transform: scale(1);
+  opacity: 1;
+}
   .iphone-viewer-counter {
     position: absolute; top: env(safe-area-inset-top, 20px); /* 避开手机刘海 */
     color: white; background: rgba(255,255,255,0.1);
@@ -554,152 +581,118 @@ iframe {
 
 <script is:inline>
   /**
-   * J-OS iPhone 核心逻辑整合版 (包含滑动与点击切换)
+   * J-OS iPhone 核心逻辑 - 真机强化版
    */
-
-  // --- 1. 全局变量 ---
   let currentIphoneCategory = 'all';
   let iphoneAlbum = [];
   let iphoneIndex = 0;
   let touchStartX = 0;
-  let touchEndX = 0;
 
-  // --- 2. 窗口管理 ---
-  window.openIphoneWin = function(id) {
+  // 1. 基础窗口逻辑
+  window.openIphoneWin = (id) => {
     const el = document.getElementById(id);
     if (el) {
       el.classList.add('active');
-      const statusbar = document.querySelector('.iphone-statusbar');
-      if (statusbar) statusbar.style.color = '#000';
+      const sb = document.querySelector('.iphone-statusbar');
+      if (sb) sb.style.color = '#000';
     }
   };
 
-  window.closeIphoneWin = function(id) {
+  window.closeIphoneWin = (id) => {
     const el = document.getElementById(id);
     if (el) {
       el.classList.remove('active');
-      const activeWins = document.querySelectorAll('.iphone-window.active');
-      if (activeWins.length === 0) {
-        const statusbar = document.querySelector('.iphone-statusbar');
-        if (statusbar) statusbar.style.color = '#fff';
+      if (document.querySelectorAll('.iphone-window.active').length === 0) {
+        const sb = document.querySelector('.iphone-statusbar');
+        if (sb) sb.style.color = '#fff';
       }
     }
   };
 
-  // --- 3. 过滤与搜索 ---
-  window.filterIphoneByCategory = function(cat, el) {
-    currentIphoneCategory = cat;
-    document.querySelectorAll('.iphone-cat-item').forEach(item => item.classList.remove('active'));
-    if (el) el.classList.add('active');
-    window.filterIphonePosts();
-  };
-
-  window.openCategory = function(catName) {
-    currentIphoneCategory = catName;
-    window.filterIphonePosts();
-    document.querySelectorAll('.iphone-cat-item').forEach(item => {
-      item.classList.toggle('active', item.innerText === catName);
-    });
-    window.openIphoneWin('iphone-folder'); 
-  };
-
-  window.filterIphonePosts = function() {
-    const query = document.getElementById('iphone-finder-search')?.value.toLowerCase().trim() || "";
-    const items = document.querySelectorAll('#iphone-post-list .iphone-list-item');
-    items.forEach(item => {
+  // 2. 搜索与过滤
+  window.filterIphonePosts = () => {
+    const q = document.getElementById('iphone-finder-search')?.value.toLowerCase().trim() || "";
+    document.querySelectorAll('#iphone-post-list .iphone-list-item').forEach(item => {
       const title = item.querySelector('.item-title')?.innerText.toLowerCase() || "";
       const cat = item.getAttribute('data-category') || "";
-      const match = (currentIphoneCategory === 'all' || cat === currentIphoneCategory) && title.includes(query);
+      const match = (currentIphoneCategory === 'all' || cat === currentIphoneCategory) && title.includes(q);
       item.style.display = match ? 'flex' : 'none';
     });
   };
 
-  // --- 4. 图片预览逻辑 (含滑动 + 点击) ---
-  
-  // 监听正文图片点击开启预览
-  document.addEventListener('click', function(e) {
-    const article = e.target.closest('.iphone-article');
-    const photos = e.target.closest('.photo-grid');
-    
-    if (e.target.tagName === 'IMG' && (article || photos)) {
-      const container = article || photos;
+  window.openCategory = (cat) => {
+    currentIphoneCategory = cat;
+    window.filterIphonePosts();
+    window.openIphoneWin('iphone-folder');
+  };
+
+  // 3. 图片预览核心 (真机适配)
+  document.addEventListener('click', (e) => {
+    const container = e.target.closest('.iphone-article') || e.target.closest('.photo-grid');
+    if (e.target.tagName === 'IMG' && container) {
       const imgs = Array.from(container.querySelectorAll('img'));
-      iphoneAlbum = imgs.map(img => img.src);
+      iphoneAlbum = imgs.map(i => i.src);
       iphoneIndex = iphoneAlbum.indexOf(e.target.src);
-      showIphoneViewer();
+      
+      const v = document.getElementById('iphone-image-viewer');
+      if (v) {
+        updateUI();
+        v.style.display = 'flex';
+        setTimeout(() => v.classList.add('active'), 10);
+      }
     }
   });
 
-  function showIphoneViewer() {
-    const v = document.getElementById('iphone-image-viewer');
-    if (!v) return;
-    updateIphoneUI();
-    v.style.display = 'flex';
-    setTimeout(() => v.classList.add('active'), 10);
-    initSwipeListener(); // 初始化滑动监听
-  }
-
-  function updateIphoneUI() {
+  function updateUI() {
     const img = document.getElementById('iphone-viewer-img');
-    const counter = document.getElementById('iphone-viewer-counter');
+    const cnt = document.getElementById('iphone-viewer-counter');
     if (img) img.src = iphoneAlbum[iphoneIndex];
-    if (counter) counter.innerText = `${iphoneIndex + 1} / ${iphoneAlbum.length}`;
+    if (cnt) cnt.innerText = `${iphoneIndex + 1} / ${iphoneAlbum.length}`;
   }
 
-  // 点击区域判定切换
+  // 处理点击切换
   window.handleIphoneImageClick = function(e) {
-    e.stopPropagation(); // 防止触发背景关闭
-    if (iphoneAlbum.length <= 1) {
-      closeIphoneImageViewer();
-      return;
-    }
+    e.stopPropagation();
+    if (iphoneAlbum.length <= 1) return closeIphoneImageViewer();
 
-    const rect = e.target.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const width = rect.width;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX || e.touches[0].clientX) - rect.left;
+    const ratio = x / rect.width;
 
-    if (x < width * 0.35) {
-      changeIphoneImage(-1); // 点击左侧
-    } else if (x > width * 0.65) {
-      changeIphoneImage(1);  // 点击右侧
-    } else {
-      closeIphoneImageViewer(); // 点击中间关闭
-    }
+    if (ratio < 0.3) changeImg(-1);      // 点左侧
+    else if (ratio > 0.7) changeImg(1);  // 点右侧
+    else closeIphoneImageViewer();       // 点中间
   };
 
-  // 滑动切换逻辑
-  function initSwipeListener() {
-    const img = document.getElementById('iphone-viewer-img');
-    if (!img || img.dataset.swipeLinked) return;
-
-    img.addEventListener('touchstart', e => {
-      touchStartX = e.changedTouches[0].screenX;
+  // 左右滑动监听 (针对真机 touch 事件)
+  const imgEl = document.getElementById('iphone-viewer-img');
+  if (imgEl) {
+    imgEl.addEventListener('touchstart', e => {
+      touchStartX = e.touches[0].clientX;
     }, {passive: true});
 
-    img.addEventListener('touchend', e => {
-      touchEndX = e.changedTouches[0].screenX;
+    imgEl.addEventListener('touchend', e => {
+      const touchEndX = e.changedTouches[0].clientX;
       const diff = touchStartX - touchEndX;
-      if (Math.abs(diff) > 50) { // 滑动阈值
-        changeIphoneImage(diff > 0 ? 1 : -1);
+      if (Math.abs(diff) > 50) { // 滑动距离超过50px
+        changeImg(diff > 0 ? 1 : -1);
       }
     }, {passive: true});
-
-    img.dataset.swipeLinked = "true"; // 防止重复绑定
   }
 
-  window.changeIphoneImage = function(step) {
+  function changeImg(step) {
     iphoneIndex = (iphoneIndex + step + iphoneAlbum.length) % iphoneAlbum.length;
     const img = document.getElementById('iphone-viewer-img');
     if (img) {
       img.style.opacity = '0';
       setTimeout(() => {
-        updateIphoneUI();
+        updateUI();
         img.style.opacity = '1';
       }, 150);
     }
-  };
+  }
 
-  window.closeIphoneImageViewer = function() {
+  window.closeIphoneImageViewer = () => {
     const v = document.getElementById('iphone-image-viewer');
     if (v) {
       v.classList.remove('active');
@@ -707,15 +700,13 @@ iframe {
     }
   };
 
-  // --- 5. 辅助功能 ---
-  function updateIphoneClock() {
+  // 4. 时钟更新
+  setInterval(() => {
     const clock = document.getElementById('iphone-clock');
     if (clock) {
       const now = new Date();
       clock.innerText = now.getHours().toString().padStart(2, '0') + ':' + 
                         now.getMinutes().toString().padStart(2, '0');
     }
-  }
-  setInterval(updateIphoneClock, 1000);
-  updateIphoneClock();
+  }, 1000);
 </script>

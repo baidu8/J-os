@@ -87,7 +87,68 @@ import Window from './Window.astro';
   </div>
 </div>
 
+<div id="mac-image-viewer" class="mac-image-viewer">
+  <div class="mac-viewer-overlay" onclick="closeMacViewer()"></div>
+  
+  <img id="mac-viewer-img" src="" alt="预览图片" />
+
+  <div class="mac-viewer-toolbar">
+    <button onclick="changeMacImage(-1)" title="上一张 (←)">❮</button>
+    <span id="mac-viewer-counter">1 / 1</span>
+    <button onclick="changeMacImage(1)" title="下一张 (→)">❯</button>
+    <div class="toolbar-divider"></div>
+    <button onclick="closeMacViewer()" title="关闭 (Esc)">✕</button>
+  </div>
+</div>
+
 <style>
+/* 使用 :global 确保样式能穿透到 Markdown 渲染出的 HTML 中 */
+  
+  :global(.image-grid-folder) {
+    display: grid;
+    /* 自动填充，模拟访达的网格布局 */
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 25px;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 12px;
+    margin: 20px 0;
+    justify-items: center;
+  }
+
+  :global(.image-grid-folder img) {
+    /* 强制固定大小，模拟中图标 */
+    width: 110px !important;
+    height: 110px !important;
+    object-fit: cover !important;
+    margin: 0 !important;
+    
+    /* 访达图标风格：白色底边、细边框、投影 */
+    background: #ffffff;
+    padding: 3px;
+    border: 0.5px solid rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  :global(.image-grid-folder img:hover) {
+    transform: scale(1.08) translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+    border-color: #007aff; /* 模拟选中的蓝色 */
+  }
+
+  /* 适配正文里的其他普通图片，也稍微控制一下 */
+  :global(.markdown-body img:not(.image-grid-folder img)) {
+    max-width: 60%;
+    height: auto;
+    display: block;
+    margin: 20px auto;
+    border-radius: 8px;
+    cursor: zoom-in;
+  }
 /* 针对 Mac 窗口内 Markdown 内容的全局样式补丁 */
   .markdown-body img {
     max-width: 100%;
@@ -385,66 +446,102 @@ body {
 .grid-item:hover {
   background: rgba(0, 0, 0, 0.05); /* 鼠标移上去有个浅色底 */
 }
+.mac-image-viewer {
+    position: fixed; inset: 0; z-index: 99999;
+    display: none; justify-content: center; align-items: center;
+    background: rgba(0, 0, 0, 0.3); /* 较浅的遮罩，靠模糊出效果 */
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    opacity: 0; transition: opacity 0.3s ease;
+  }
+  .mac-image-viewer.active { display: flex; opacity: 1; }
+
+  .mac-viewer-overlay { position: absolute; inset: 0; cursor: zoom-out; }
+
+  #mac-viewer-img {
+    max-width: 85%; max-height: 80%;
+    object-fit: contain; border-radius: 10px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    z-index: 10; transform: scale(0.95);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
+  }
+  .mac-image-viewer.active #mac-viewer-img { transform: scale(1); }
+
+  /* 悬浮工具栏 */
+  .mac-viewer-toolbar {
+    position: absolute; bottom: 40px; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(45, 45, 45, 0.7);
+    backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+    border: 0.5px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px; padding: 8px 15px;
+    display: flex; align-items: center; gap: 15px;
+    color: white; z-index: 20;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  }
+
+  .mac-viewer-toolbar button {
+    background: none; border: none; color: white;
+    font-size: 18px; cursor: pointer; padding: 5px 10px;
+    border-radius: 6px; transition: background 0.2s;
+  }
+  .mac-viewer-toolbar button:hover { background: rgba(255,255,255,0.1); }
+  
+  .toolbar-divider { width: 1px; height: 20px; background: rgba(255,255,255,0.2); }
+  
+  #mac-viewer-counter { font-size: 13px; font-family: system-ui; min-width: 45px; text-align: center; }
 </style>
 
 <script is:inline>
-// --- 全局变量定义 ---
-let windowCount = 0;      // 用于窗口错开计数
-let highestZIndex = 1000; // 全局最高层级计数器
-const WIN_W = 800;        // 窗口预设宽度
-const WIN_H = 500;        // 窗口预设高度
-const STEP = 30;          // 错开像素步长
+// --- 1. 全局变量定义 ---
+let windowCount = 0;
+let highestZIndex = 1000;
+const WIN_W = 800;
+const WIN_H = 500;
+const STEP = 30;
 
-// --- 1. 置顶逻辑 (核心修复) ---
+// Mac 图片预览状态
+let macAlbum = [];
+let macIndex = 0;
+
+// --- 2. 置顶逻辑 ---
 function bringToFront(el) {
   if (!el) return;
   highestZIndex++;
-  // 提升整个容器（overlay）的层级
   el.style.zIndex = highestZIndex;
 }
 
-// --- 2. 窗口控制 ---
+// --- 3. 窗口控制 ---
 function openWin(id) {
   const el = document.getElementById(id);
   if (!el) return;
   const win = el.querySelector('.app-window');
 
-  // 更新 Dock 栏小圆点 (active 状态)
   document.querySelectorAll('.dock-item').forEach(item => {
-    // 匹配 onclick 属性中包含该 ID 的图标
     if (item.getAttribute('onclick')?.includes(id)) {
       item.classList.add('active');
     }
   });
 
-  // 如果窗口当前是隐藏状态，初始化位置
   if (el.style.display === 'none' || el.style.display === '') {
     const screenW = window.innerWidth;
     const screenH = window.innerHeight;
     let left = (screenW - WIN_W) / 2;
     let top = (screenH - WIN_H) / 2 - 40;
-
-    // 阶梯错开逻辑
     const offset = (windowCount % 10) * STEP;
     win.style.left = (left + offset) + 'px';
     win.style.top = (top + offset) + 'px';
     win.style.margin = "0"; 
-
     el.style.display = 'block';
     windowCount++; 
   }
 
-  // 执行打开动画
   setTimeout(() => {
-    el.classList.add('active'); // 用于 CSS 动画控制
+    el.classList.add('active'); 
     win.style.transform = "scale(1)";
     win.style.opacity = "1";
   }, 10);
 
-  // 重要：显示时立即置顶
   bringToFront(el);
-
-  // 如果是从最小化恢复，移除最小化图标
   const dIcon = document.getElementById('d-icon-' + id);
   if (dIcon) dIcon.remove();
   updateDockDivider();
@@ -453,18 +550,13 @@ function openWin(id) {
 function closeWin(id) {
   const el = document.getElementById(id);
   const win = el.querySelector('.app-window');
-  
-  // 关窗动画
   win.style.transform = "scale(0.9)";
   win.style.opacity = "0";
-  
-  // 清除 Dock 小圆点
   document.querySelectorAll('.dock-item').forEach(item => {
     if (item.getAttribute('onclick')?.includes(id)) {
       item.classList.remove('active');
     }
   });
-
   setTimeout(() => {
     el.classList.remove('active');
     el.style.display = 'none';
@@ -474,14 +566,10 @@ function closeWin(id) {
 function minWin(id, emoji) {
   const el = document.getElementById(id);
   const win = el.querySelector('.app-window');
-  
-  // 最小化动画
   win.style.transform = "scale(0.1) translateY(1000px)";
   win.style.opacity = "0";
-
   setTimeout(() => {
     el.style.display = 'none';
-    // 放入 Dock 最小化区域
     if (!document.getElementById('d-icon-' + id)) {
       const zone = document.getElementById('min-zone');
       const icon = document.createElement('div');
@@ -506,43 +594,95 @@ function updateDockDivider() {
   if (divider) divider.style.display = zone.children.length > 0 ? "block" : "none";
 }
 
-// --- 3. 拖拽引擎 ---
+// --- 4. 电脑端图片预览 (核心匹配：markdown-body) ---
+document.addEventListener('click', function(e) {
+  // 关键：匹配你 HTML 里的 .markdown-body 或其他可能的容器
+  const container = e.target.closest('.markdown-body') || e.target.closest('.post-content');
+  
+  if (e.target.tagName === 'IMG' && container) {
+    // 过滤掉太小的图标
+    if (e.target.naturalWidth < 50 && e.target.width < 50) return;
+
+    const imgs = Array.from(container.querySelectorAll('img'));
+    macAlbum = imgs.map(img => img.src);
+    macIndex = macAlbum.indexOf(e.target.src);
+    
+    openMacViewer();
+  }
+});
+
+function openMacViewer() {
+  const v = document.getElementById('mac-image-viewer');
+  if (!v) return;
+  
+  // 确保预览器始终在访达窗口之上
+  v.style.zIndex = 100000; 
+  
+  updateMacUI();
+  v.style.display = 'flex';
+  setTimeout(() => v.classList.add('active'), 10);
+  document.addEventListener('keydown', handleMacKeyDown);
+}
+
+function updateMacUI() {
+  const img = document.getElementById('mac-viewer-img');
+  const counter = document.getElementById('mac-viewer-counter');
+  if (img) img.src = macAlbum[macIndex];
+  if (counter) counter.innerText = `${macIndex + 1} / ${macAlbum.length}`;
+}
+
+window.changeMacImage = function(step) {
+  if (macAlbum.length <= 1) return;
+  macIndex = (macIndex + step + macAlbum.length) % macAlbum.length;
+  const img = document.getElementById('mac-viewer-img');
+  img.style.opacity = '0.5';
+  updateMacUI();
+  setTimeout(() => img.style.opacity = '1', 100);
+};
+
+window.closeMacViewer = function() {
+  const v = document.getElementById('mac-image-viewer');
+  if (v) {
+    v.classList.remove('active');
+    setTimeout(() => v.style.display = 'none', 300);
+  }
+  document.removeEventListener('keydown', handleMacKeyDown);
+};
+
+function handleMacKeyDown(e) {
+  const v = document.getElementById('mac-image-viewer');
+  if (v && v.style.display === 'flex') {
+    if (e.key === 'ArrowRight') changeMacImage(1);
+    if (e.key === 'ArrowLeft') changeMacImage(-1);
+    if (e.key === 'Escape') closeMacViewer();
+  }
+}
+
+// --- 5. 拖拽引擎 ---
 let dragObj = null;
 let startMouseX, startMouseY, startObjX, startObjY;
 
 document.addEventListener('mousedown', (e) => {
   if (e.target.tagName === 'INPUT') return;
-
   const handle = e.target.closest('.drag-handle');
   if (!handle) return;
-
-  // 这里的 target 是窗口本体或图标
   const target = handle.closest('.app-window') || handle.closest('.icon-unit');
   if (!target || target.classList.contains('is-fullscreen')) return;
-
   dragObj = target;
-  dragObj.style.transition = 'none'; // 拖拽时关闭过渡动画
-  
-  // 只要点中窗口任何地方（通过冒泡）或标题栏，就置顶
+  dragObj.style.transition = 'none'; 
   const overlay = dragObj.closest('.window-overlay');
-  if (overlay) {
-    bringToFront(overlay);
-  }
-
+  if (overlay) bringToFront(overlay);
   startMouseX = e.clientX;
   startMouseY = e.clientY;
   startObjX = dragObj.offsetLeft;
   startObjY = dragObj.offsetTop;
-
-  e.preventDefault(); // 防止文字选中
+  e.preventDefault(); 
 });
 
 document.addEventListener('mousemove', (e) => {
   if (!dragObj) return;
-  const deltaX = e.clientX - startMouseX;
-  const deltaY = e.clientY - startMouseY;
-  dragObj.style.left = (startObjX + deltaX) + 'px';
-  dragObj.style.top = (startObjY + deltaY) + 'px';
+  dragObj.style.left = (startObjX + (e.clientX - startMouseX)) + 'px';
+  dragObj.style.top = (startObjY + (e.clientY - startMouseY)) + 'px';
   dragObj.style.margin = "0"; 
 });
 
@@ -555,7 +695,7 @@ document.addEventListener('mouseup', () => {
   }
 });
 
-// --- 4. 辅助功能 (时钟与过滤) ---
+// --- 6. 辅助功能 (时钟与过滤) ---
 setInterval(() => {
   const clock = document.getElementById('mac-clock');
   if (clock) {
@@ -568,8 +708,6 @@ setInterval(() => {
 }, 1000);
 
 let currentCategory = 'all';
-
-// 定义到全局 window 上，确保 HTML 里的 onclick 能找到
 window.filterByCategory = function(cat, el) {
   currentCategory = cat;
   document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
@@ -589,7 +727,7 @@ window.filterPosts = function() {
   });
 };
 
-// 暴露函数给 HTML
+// 暴露函数给全局
 window.openWin = openWin;
 window.closeWin = closeWin;
 window.minWin = minWin;
