@@ -1,45 +1,51 @@
 ---
 /**
- * index.astro - 三端博客中控页面
- * 2026年 仿苹果系统 UI 博客
+ * index.astro - 三端博客中控页面 (已优化移动端全屏并支持正文渲染)
  */
-
 import { getCollection } from 'astro:content';
 
-// 导入三个终端的独立组件
 import MacView from '../components/MacView.astro';
 import IpadView from '../components/IpadView.astro';
 import IphoneView from '../components/IphoneView.astro';
-// 1. 获取内容：从 src/content/blog 读取所有 Markdown 文件
+
 const allPosts = await getCollection('blog');
 
-// --- 新增这一行：提取分类 ---
+// 提取分类
 const categories = [...new Set(allPosts.map(post => post.data.category || '未分类'))];
 
-// 2. 预处理数据：按日期倒序排列，并映射成组件需要的格式
-const posts = allPosts
-  .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime())
-  .map(post => ({
-    id: post.slug,           // 使用文件名作为唯一 ID，解决 ID 冲突
-    data: post.data,         // 包含 title, date, description
-    body: post.body,         // 原始内容（预留给以后全文渲染）
-    slug: post.slug
-  }));
+// --- 核心修改：渲染 Markdown 内容 ---
+const posts = await Promise.all(
+  allPosts
+    .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime())
+    .map(async (post) => {
+      const { Content } = await post.render(); // 这一步是关键，解析 Markdown
+      return {
+        id: post.slug,
+        data: post.data,
+        body: post.body,
+        slug: post.slug,
+        Content: Content // 将渲染后的组件传递给子页面
+      };
+    })
+);
 
-// 页面标题
-const pageTitle = "My OS Blog - 2026";
+const pageTitle = "J-OS";
 ---
 
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="generator" content={Astro.generator} />
     <title>{pageTitle}</title>
     
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="J-OS" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    
     <style is:global>
-      /* 全局 CSS 重置：确保三端背景不留白，不滚动 */
       * {
         margin: 0;
         padding: 0;
@@ -48,32 +54,69 @@ const pageTitle = "My OS Blog - 2026";
       
       html, body {
         width: 100%;
-        height: 100%;
-        overflow: hidden; /* 禁止浏览器原生滚动条，模拟原生 App 感 */
-        background-color: #000; /* 背景黑屏，防止切换时闪白 */
+        /* 3. 关键修改：使用 100svh 确保在所有手机浏览器中不被挡住底部 */
+        height: 100vh;
+        height: 100svh; 
+        overflow: hidden;
+        background-color: #000;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        
+        /* 禁止长按弹出菜单，更像原生App */
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
       }
 
-      /* 视图容器：默认全部隐藏 */
       .os-view {
         display: none;
         width: 100vw;
         height: 100vh;
+        height: 100svh;
       }
 
-      /* --- 响应式核心逻辑 --- */
+      /* 确保弹窗内的图片永远不会超过父级宽度 */
+.modal-content img, 
+.post-content img {
+  max-width: 100%;    /* 宽度最大等于父容器 */
+  height: auto;       /* 高度按比例自动缩放，不拉伸 */
+  display: block;     /* 消除图片底部的微小空隙 */
+  border-radius: 8px; /* 给文章图片也加一点圆角，更符合 iOS 审美 */
+  margin: 10px auto;  /* 居中显示 */
+  object-fit: contain; /* 确保图片完整显示在区域内 */
+}
+.iphone-full-page {
+  /* ...你之前的样式... */
+  overflow-y: auto;   /* 允许上下滚动 */
+  overflow-x: hidden; /* 绝对禁止横向溢出 */
+  display: flex;
+  flex-direction: column;
+}
+/* 针对文章内容的特殊处理 */
+.post-body {
+  word-wrap: break-word; /* 防止长字母/代码撑破弹窗 */
+  overflow-wrap: break-word;
+}
 
-      /* 1. 移动端 (iPhone)：小于 768px */
+.post-body img {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* 给图片加点阴影，更有层次感 */
+}
+
+      /* 移动端 (iPhone) */
       @media (max-width: 767px) {
-        #iphone-view { display: block; }
+        #iphone-view { 
+          display: block; 
+          /* 4. 关键新增：处理 iOS 安全区域（避开刘海和底部横条） */
+          padding-top: env(safe-area-inset-top);
+          padding-bottom: env(safe-area-inset-bottom);
+        }
       }
 
-      /* 2. 平板端 (iPad)：768px 到 1023px */
+      /* 平板端 (iPad) */
       @media (min-width: 768px) and (max-width: 1024px) {
         #ipad-view { display: block; }
       }
 
-      /* 3. 电脑端 (Mac)：大于 1024px */
+      /* 电脑端 (Mac) */
       @media (min-width: 1025px) {
         #mac-view { display: block; }
       }
@@ -90,8 +133,8 @@ const pageTitle = "My OS Blog - 2026";
     </div>
 
     <div id="mac-view" class="os-view">
-  <MacView posts={posts} categories={categories} />
-</div>
+      <MacView posts={posts} categories={categories} />
+    </div>
 
   </body>
 </html>
