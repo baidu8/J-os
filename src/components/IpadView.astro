@@ -63,11 +63,59 @@ const getCategoryIcon = (cat) => {
 
   <div class="ipad-dock-fixed">
     <div class="ipad-dock glass">
-      <div class="dock-app">🌐</div>
-      <div class="dock-app">📷</div>
-      <div class="dock-app">🎵</div>
+      <div class="dock-app" onclick="openIpadWin('ipad-browser')">🌐</div>
+      <div class="dock-app" onclick="openIpadWin('ipad-photos')">📷</div>
+      <div class="dock-app" onclick="openIpadWin('ipad-music')">🎵</div>
       <div class="dock-divider"></div>
-      <div class="dock-app">📝</div>
+      <div class="dock-app" onclick="openIpadWin('ipad-notes')">📝</div>
+    </div>
+  </div>
+  
+  <div class="ipad-overlay" id="ipad-music">
+    <div class="ipad-window">
+      <div class="ipad-grabber"></div>
+      
+      <div class="ipad-window-header">
+        <button class="ipad-close-btn" onclick="closeIpadWin('ipad-music')">完成</button>
+        <div class="ipad-window-title">音乐</div>
+        <div style="width:60px"></div> </div>
+  
+      <div class="ipad-window-body no-padding">
+        <div class="music-app-container">
+          <iframe 
+  id="netease-player"
+  src="https://music.163.com/outchain/player?type=0&id=2250100910&auto=0&height=430" 
+  width="100%" 
+  height="100%" 
+  frameborder="no" 
+  marginwidth="0" 
+  marginheight="0" 
+  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
+</iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  
+  <div class="ipad-overlay" id="ipad-notes">
+    <div class="ipad-window">
+      <div class="ipad-grabber"></div>
+      
+      <div class="ipad-window-header">
+        <button class="ipad-close-btn" onclick="closeIpadWin('ipad-notes')">完成</button>
+        <div class="ipad-window-title">备忘录</div>
+        <button class="ipad-close-btn" style="color:#007aff" onclick="createNewNote()">➕</button>
+      </div>
+  
+      <div class="ipad-window-body" style="display: flex; padding: 0;">
+        <div id="notes-sidebar-list" class="ipad-notes-sidebar">
+          </div>
+        
+        <div class="ipad-notes-main">
+          <textarea id="notes-textarea" placeholder="开始输入..."></textarea>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -360,6 +408,99 @@ const getCategoryIcon = (cat) => {
 .viewer-prev { left: 20px; top: 50%; transform: translateY(-50%); background: none; border: none; color: white; font-size: 40px; cursor: pointer; }
 .viewer-next { right: 20px; top: 50%; transform: translateY(-50%); background: none; border: none; color: white; font-size: 40px; cursor: pointer; }
 .viewer-counter { bottom: 40px; color: white; background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 14px; }
+/* 统一样式：全屏覆盖层 */
+.ipad-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(5px);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.ipad-overlay.active {
+  display: flex;
+}
+
+/* iPad 窗口主体 */
+.ipad-window {
+  width: 92%;
+  height: 90%;
+  background: #fff;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* 便签专用布局 */
+.ipad-notes-sidebar {
+  width: 260px;
+  background: #f9f9f9;
+  border-right: 1px solid #eee;
+  overflow-y: auto;
+}
+
+.ipad-notes-main {
+  flex: 1;
+  background: #fff;
+}
+
+#notes-textarea {
+  width: 100%;
+  height: 100%;
+  padding: 30px;
+  border: none;
+  outline: none;
+  font-size: 18px;
+  line-height: 1.6;
+  resize: none;
+}
+
+/* 确保 iPad 音乐容器和 iframe 彻底铺满 */
+#ipad-music .ipad-window-body {
+  position: relative !important;
+  flex: 1 !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+#ipad-music .music-app-container {
+  flex: 1 !important;
+  height: 100% !important;
+  width: 100% !important;
+}
+
+#ipad-music #netease-player {
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+  /* 解决 iframe 在某些浏览器下的 display 问题 */
+  display: block !important;
+}
+/* 针对图 4 里的结构进行强力修复 */
+:global(#ipad-music .ipad-window-body.no-padding) {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  min-height: 400px !important; /* 给一个最小高度保底 */
+}
+
+:global(#ipad-music .music-app-container) {
+  flex: 1 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+:global(#netease-player) {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 450px !important; /* 强制网易云组件显示高度 */
+}
 </style>
 
 <script is:inline>
@@ -488,4 +629,41 @@ let currentAlbum = [];
   }
   setInterval(updateIpadTime, 1000);
   updateIpadTime();
+  // 在你的 <script is:inline> 中补充
+
+// 1. 便签持久化 (iPad 端独立存储或共用)
+const ipadNotes = document.getElementById('ipad-notes-area');
+if (ipadNotes) {
+    // 读取
+    ipadNotes.value = localStorage.getItem('mac_notes_content') || '';
+    // 保存
+    ipadNotes.addEventListener('input', (e) => {
+        localStorage.setItem('mac_notes_content', e.target.value);
+    });
+}
+
+// 2. 优化：点击遮罩层也可以关闭窗口
+document.querySelectorAll('.ipad-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            const id = overlay.id;
+            closeIpadWin(id);
+        }
+    });
+});
+window.openIpadWin = function(id) {
+  const el = document.getElementById(id);
+  if(el) {
+    el.style.display = 'flex';
+    setTimeout(() => el.classList.add('active'), 10);
+    
+    // 如果是音乐窗口，确保内部 iframe 加载
+    if (id === 'ipad-music') {
+      const iframe = el.querySelector('iframe');
+      if (iframe && !iframe.src.includes('music.163.com')) {
+        iframe.src = "//music.163.com/outchain/player?type=0&id=2250100910&auto=0&height=430";
+      }
+    }
+  }
+};
 </script>

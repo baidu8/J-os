@@ -136,5 +136,92 @@ const pageTitle = "J-OS";
       <MacView posts={posts} categories={categories} />
     </div>
 
+    <script src="/notes.js" is:inline></script>
+    <script src="/messages.js" is:inline></script>
+    <script is:inline>
+      // 因为你的 notes.js 里面是用 getElementById('notes-textarea')
+      // 而三端渲染在同一个 HTML 里，会出现 ID 重复的情况。
+      // 我们用这段小代码让 JS 能够同时操作三个视图里的输入框。
+      
+      document.addEventListener('input', (e) => {
+        if (e.target.id === 'notes-textarea') {
+          // 当你在一端输入时，自动同步到另外两端的输入框
+          const allTextareas = document.querySelectorAll('#notes-textarea');
+          allTextareas.forEach(el => {
+            if (el !== e.target) el.value = e.target.value;
+          });
+        }
+      });
+      
+  // --- 7. 相册核心补丁 ---
+  function initPhotoSidebar() {
+    const sidebarList = document.getElementById('photos-post-links');
+    if (!sidebarList) return;
+  
+    const photoPosts = Array.from(document.querySelectorAll('.post-item')).filter(item => {
+      return item.querySelector('.file-category')?.innerText === '摄影';
+    });
+  
+    sidebarList.innerHTML = photoPosts.map(post => {
+      const title = post.querySelector('.file-name').innerText;
+      const winId = post.getAttribute('onclick').match(/'([^']+)'/)[1];
+      return `
+        <div class="sidebar-item" onclick="loadAlbumFromPost('${winId}', '${title}', this)">
+          📸 ${title}
+        </div>
+      `;
+    }).join('');
+  
+    // 【优化】：默认加载最新一篇
+    const firstItem = sidebarList.querySelector('.sidebar-item');
+    if (firstItem) {
+      firstItem.click();
+    }
+  }
+  
+  window.loadAlbumFromPost = function(winId, title, el) {
+    document.querySelectorAll('#photos-post-links .sidebar-item').forEach(i => i.classList.remove('active'));
+    if (el) el.classList.add('active');
+  
+    const headerTitle = document.querySelector('.photos-header h2');
+    const headerStats = document.querySelector('.photos-header p');
+    if (headerTitle) headerTitle.innerText = title;
+  
+    const postWin = document.getElementById(winId);
+    const photoGrid = document.querySelector('.photos-grid');
+    
+    if (!postWin || !photoGrid) return;
+  
+    const imgs = Array.from(postWin.querySelectorAll('.image-grid-folder img'));
+  
+    if (imgs.length === 0) {
+      photoGrid.innerHTML = '<div style="grid-column:1/-1; padding:40px; color:#999; text-align:center;">该博文中没有网格图片</div>';
+      if (headerStats) headerStats.innerText = '0 张照片';
+      return;
+    }
+  
+    if (headerStats) headerStats.innerText = `${imgs.length} 张照片`;
+    // 关键：点击卡片调用预览
+    photoGrid.innerHTML = imgs.map((img, idx) => `
+      <div class="photo-card" onclick="openMacViewerFromAlbum('${winId}', ${idx})">
+        <img src="${img.src}" />
+      </div>
+    `).join('');
+  };
+  
+  // 【修复】：相册专用预览函数
+  window.openMacViewerFromAlbum = function(winId, index) {
+    const postWin = document.getElementById(winId);
+    if (!postWin) return;
+    const imgs = Array.from(postWin.querySelectorAll('.image-grid-folder img')).map(i => i.src);
+    
+    macAlbum = imgs;
+    macIndex = index;
+    openMacViewer();
+  };
+  
+  document.addEventListener('DOMContentLoaded', initPhotoSidebar);
+  setTimeout(initPhotoSidebar, 1000);
+    </script>
   </body>
 </html>
