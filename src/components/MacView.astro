@@ -53,13 +53,6 @@ import Window from './Window.astro';
     </div>
   </Window>
 
-  <Window id="mac-message" title="标签" emoji="🧭">
-    <div style="padding: 40px; text-align: center; width: 100%;">
-      <h2>模拟浏览器窗口</h2>
-      <img src="https://4kwallpapers.com/images/walls/thumbs_3t/6420.jpg"/>
-    </div>
-  </Window>
-
   <Window id="mac-safari" title="" emoji="🧭">
     <div class="safari-full-container">
       <div class="safari-nav-bar">
@@ -92,7 +85,7 @@ import Window from './Window.astro';
     <div class="photos-container">
       <div class="photos-sidebar">
         <div class="sidebar-group">库</div>
-        <div class="sidebar-item active">📸 所有照片</div>
+        <div class="sidebar-item" id="all-photos-tab">📸 所有照片</div>
         <div class="sidebar-group">我的摄影集</div>
         <div id="photos-post-links" class="sidebar-list">
           </div>
@@ -100,21 +93,125 @@ import Window from './Window.astro';
       
       <div class="photos-main">
         <div class="photos-header">
-          <h2>精选展示</h2>
-          <p>点击左侧查看完整摄影博文</p>
+          <h2 id="album-title">加载中...</h2>
+          <p id="album-stats">正在读取摄影集...</p>
         </div>
-        <div class="photos-grid">
-          <div class="photo-card"><img src="https://github.com/user-attachments/assets/6fc9bc33-9998-48f6-b1b9-cce7e0e05656" /></div>
-          <div class="photo-card"><img src="https://github.com/user-attachments/assets/e3a50fd2-1a47-493a-b7d0-e82e2f63ce67" /></div>
-          <div class="photo-card"><img src="https://github.com/user-attachments/assets/6b1492e7-9782-448b-89a7-dd0899978307" /></div>
-          <div class="photo-card"><img src="https://github.com/user-attachments/assets/6e712a38-0ed2-4011-99af-340b17c46258" /></div>
-          <div class="photo-card"><img src="https://github.com/user-attachments/assets/aa8c860b-ac00-438d-b1b5-78c06750a535" /></div>
-          <div class="photo-card"><img src="https://github.com/user-attachments/assets/fae013be-b079-4772-8673-887ef9c926a9" /></div>
+        <div id="photos-grid" class="photos-grid">
+          </div>
+      </div>
+    </div>
+  </Window>
+
+  <Window id="mac-notes" class="notes-window" title="便签" emoji="📝">
+    <div slot="header-right" style="position: absolute; right: 15px; top: 8px; display: flex; gap: 8px;">
+      <button onclick="createNewNote()" title="新建" style="cursor:pointer; border:1px solid #ddd; background:#fff; border-radius:4px;">➕</button>
+      <button onclick="deleteCurrentNote()" title="删除" style="cursor:pointer; border:1px solid #ddd; background:#fff; border-radius:4px;">🗑️</button>
+      <button onclick="exportNote()" style="cursor:pointer; font-size:12px; padding:2px 8px; border-radius:4px; border:1px solid #ddd; background:#fff;">💾 导出</button>
+    </div>
+  
+    <div class="notes-app-container" style="display: flex; height: 100%; background: #fff;">
+      <div class="notes-sidebar" style="width: 200px; border-right: 1px solid #eee; background: #fbfbfb; overflow-y: auto;">
+        <div id="notes-sidebar-list"></div>
+      </div>
+      <div class="notes-editor" style="flex: 1; padding: 15px; background: #fff;">
+        <textarea id="notes-textarea" 
+          placeholder="点击左上角 + 新建便签..." 
+          style="width: 100%; height: 100%; border: none; outline: none; resize: none; font-size: 16px; line-height: 1.6; color: #333;"
+        ></textarea>
+      </div>
+    </div>
+  </Window>
+
+  <Window id="mac-message" class="message-window" title="信息" emoji="💬">
+    <div class="imessage-container">
+      <div class="imessage-sidebar">
+        <div class="imessage-search">
+          <input type="text" placeholder="搜索" disabled />
+        </div>
+        <div class="imessage-list">
+          <div class="imessage-item active">
+            <div class="avatar">👨‍💻</div>
+            <div class="msg-info">
+              <div class="msg-name">作者本人</div>
+              <div class="msg-preview">欢迎来到我的数字空间！</div>
+            </div>
+          </div>
+          <div class="imessage-item">
+            <div class="avatar">🤖</div>
+            <div class="msg-info">
+              <div class="msg-name">数字助手</div>
+              <div class="msg-preview">有什么可以帮您的？</div>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <div class="imessage-main">
+        <div class="imessage-header">
+          <span>收件人: 作者本人</span>
+        </div>
+        <div class="imessage-content" id="chat-flow">
+          <div class="bubble-row incoming">
+            <div class="bubble">嘿！欢迎来到我的博客。</div>
+          </div>
+          <div class="bubble-row incoming">
+            <div class="bubble">你可以点击左侧侧边栏查看我的摄影集或者便签。</div>
+          </div>
+          <div class="bubble-row outgoing">
+            <div class="bubble">哇，这个 iMessage 界面太酷了！</div>
+          </div>
+        </div>
+        <div class="imessage-input-area">
+          <div class="input-wrapper">
+            <input type="text" id="msg-input" placeholder="iMessage" />
+            <button onclick="sendMessage()">⬆️</button>
+          </div>
         </div>
       </div>
     </div>
   </Window>
 
+  <Window id="mac-music" class="music-window" title="音乐" emoji="🎵">
+    <div class="music-app-container">
+      <div class="music-sidebar">
+        <div class="sidebar-section">Apple Music</div>
+        <div class="sidebar-item active">📻 正在播放</div>
+        <div class="sidebar-item">🏠 浏览</div>
+        <div class="sidebar-section">资料库</div>
+        <div class="sidebar-item">🕒 最近添加</div>
+        <div class="sidebar-item">🎵 歌曲</div>
+        <div id="music-playlist" class="sidebar-list"></div>
+      </div>
+  
+      <div class="music-main">
+        <div class="player-wrapper">
+          <iframe 
+            id="netease-player"
+            frameborder="no" 
+            border="0" 
+            marginwidth="0" 
+            marginheight="0" 
+            width="100%" 
+            height="450" 
+            src="//music.163.com/outchain/player?type=0&id=2250100910&auto=0&height=430">
+          </iframe>
+        </div>
+        <div class="player-hint">
+          <p>正在同步网易云音乐播放列表...</p>
+        </div>
+      </div>
+    </div>
+  </Window>
+
+  <Window id="mac-trash" class="trash-window" title="废纸篓" emoji="🗑️">
+    <div class="trash-app-container">
+      <div class="trash-empty-state">
+        <div class="trash-icon-large">🗑️</div>
+        <h2>废纸篓是空的</h2>
+        <p>你可以将不再需要的文件拖到这里。</p>
+      </div>
+    </div>
+  </Window>
 
   <div class="mac-dock-container">
     <div class="mac-dock">
@@ -123,11 +220,12 @@ import Window from './Window.astro';
       <div class="dock-item" onclick="openWin('mac-photos')">🖼️</div>
       <div class="dock-item" onclick="openWin('mac-notes')">📝</div>
       <div class="dock-item" onclick="openWin('mac-message')">💬</div>
+      <div class="dock-item" onclick="openWin('mac-music')">🎵</div>
     
       <div id="dock-divider" class="dock-divider"></div>
       <div id="min-zone" class="min-zone"></div>
       
-      <div class="dock-item trash" onclick="alert('垃圾桶是空的')">🗑️</div> 
+      <div class="dock-item" onclick="openWin('mac-trash')">🗑️</div>
     </div>
   </div>
 
@@ -395,299 +493,815 @@ import Window from './Window.astro';
   font-size: 14px;
   cursor: pointer;
 }
+/* ============================================================
+   相册窗口专项样式 - 强化版（带 :global 确保生效）
+   ============================================================ */
+
+/* 1. 容器与布局 */
+:global(.photos-container) {
+  display: flex !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: #ffffff !important;
+  overflow: hidden !important;
+}
+
+/* 2. 侧边栏样式 */
+:global(.photos-sidebar) {
+  width: 180px !important;
+  background: #f6f6f6 !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.1) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 10px 0 !important;
+  flex-shrink: 0 !important;
+}
+
+:global(.photos-sidebar .sidebar-group) {
+  padding: 10px 15px 5px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #8e8e93 !important;
+  text-transform: uppercase !important;
+}
+
+:global(.photos-sidebar .sidebar-item) {
+  padding: 8px 15px !important;
+  margin: 2px 8px !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  color: #333 !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+}
+
+:global(.photos-sidebar .sidebar-item:hover) {
+  background: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* 关键：侧边栏选中高亮 */
+:global(.photos-sidebar .sidebar-item.active) {
+  background: #007aff !important;
+  color: #ffffff !important;
+}
+
+/* 3. 右侧主内容区 */
+:global(.photos-main) {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+}
+
+:global(.photos-header) {
+  padding: 20px 25px !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+/* 4. 图片网格 - 核心修复 */
+:global(.photos-grid) {
+  flex: 1 !important;
+  display: grid !important;
+  /* 强制横向平铺，每行至少能放几个 */
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important;
+  grid-auto-rows: 130px !important;
+  gap: 12px !important;
+  padding: 20px !important;
+  overflow-y: auto !important;
+  align-content: start !important;
+}
+
+/* 5. 照片卡片 */
+:global(.photo-card) {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 4px !important;
+  overflow: hidden !important;
+  background: #eee !important;
+}
+
+:global(.photo-card img) {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+  transition: transform 0.3s !important;
+}
+
+:global(.photo-card img:hover) {
+  transform: scale(1.05) !important;
+}
+/* --- 便签窗口底层结构修复 --- */
+:global(.notes-window .window-body) {
+  display: block !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+/* --- 便签主容器 (毛玻璃 & 布局) --- */
+:global(.notes-app-container) {
+  display: flex !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: rgba(255, 255, 255, 0.7) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+/* --- 左侧边栏 --- */
+:global(.notes-sidebar) {
+  width: 200px !important;
+  flex-shrink: 0 !important;
+  background: rgba(246, 246, 246, 0.5) !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
+  padding: 10px 8px !important;
+  overflow-y: auto !important;
+}
+
+/* --- 列表项 (卡片质感) --- */
+:global(.note-list-item) {
+  padding: 10px 12px !important;
+  margin-bottom: 4px !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+:global(.note-list-item:hover) {
+  background: rgba(0, 0, 0, 0.04) !important;
+}
+
+/* 激活态：macOS 经典蓝 */
+:global(.note-list-item.active) {
+  background: #007aff !important;
+  box-shadow: 0 4px 10px rgba(0, 122, 255, 0.2) !important;
+}
+
+:global(.note-list-item.active .note-item-title) { color: white !important; }
+:global(.note-list-item.active .note-item-date) { color: rgba(255, 255, 255, 0.7) !important; }
+
+/* 列表文字样式 */
+:global(.note-item-title) {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #1d1d1f !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+:global(.note-item-date) {
+  font-size: 11px !important;
+  color: #86868b !important;
+  margin-top: 2px !important;
+}
+
+/* --- 右侧编辑区 --- */
+:global(.notes-editor) {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: white !important;
+  min-width: 0 !important;
+}
+
+:global(#notes-textarea) {
+  flex: 1 !important;
+  width: 100% !important;
+  height: 100% !important;
+  padding: 25px 30px !important;
+  border: none !important;
+  outline: none !important;
+  resize: none !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-size: 15px !important;
+  line-height: 1.6 !important;
+  color: #1d1d1f !important;
+  box-sizing: border-box !important;
+}
+/* --- 信息窗口底层结构修复 (强力穿透) --- */
+:global(.message-window .window-body) {
+  display: block !important; /* 解除 flex 限制 */
+  padding: 0 !important;
+  overflow: hidden !important; /* 确保内容不溢出 */
+}
+
+/* --- iMessage 布局 --- */
+:global(.imessage-container) {
+  display: flex !important;
+  height: 100% !important;
+  background: white !important; /* 默认纯白背景 */
+  backdrop-filter: blur(20px) !important; /* 假装有毛玻璃效果，但底层窗口是白色 */
+}
+
+/* --- 侧边栏 --- */
+:global(.imessage-sidebar) {
+  width: 240px !important;
+  flex-shrink: 0 !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: #f6f6f6 !important; /* 比主窗口更暗一点 */
+}
+
+:global(.imessage-search) { padding: 10px !important; }
+:global(.imessage-search input) {
+  width: 100% !important;
+  background: #e3e3e3 !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 6px 10px !important; /* 稍微大一点的内边距 */
+  font-size: 13px !important;
+  color: #333 !important;
+  outline: none !important;
+}
+
+:global(.imessage-list) { flex: 1 !important; overflow-y: auto !important; }
+
+:global(.imessage-item) {
+  display: flex !important;
+  padding: 10px 15px !important;
+  gap: 12px !important;
+  cursor: pointer !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important; /* 更柔和的分割线 */
+  transition: background 0.2s ease !important;
+}
+
+:global(.imessage-item:hover) { background: rgba(0, 0, 0, 0.03) !important; }
+
+:global(.imessage-item.active) {
+  background: #007aff !important;
+  color: white !important;
+}
+:global(.imessage-item.active .msg-preview) { color: rgba(255, 255, 255, 0.8) !important; }
+
+:global(.imessage-item .avatar) {
+  font-size: 28px !important;
+  width: 32px; /* 固定宽度，防止头像大小不一 */
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #e0e0e0; /* 默认头像背景 */
+  flex-shrink: 0;
+}
+
+:global(.imessage-item .msg-info) { flex: 1 !important; overflow: hidden !important; }
+:global(.imessage-name) { font-weight: 600 !important; font-size: 14px !important; color: #1d1d1f !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+:global(.imessage-item.active .msg-name) { color: white !important; }
+:global(.imessage-preview) { font-size: 12px !important; color: #8e8e93 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+
+/* --- 聊天主区域 --- */
+:global(.imessage-main) {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important; /* 关键，防止内容溢出 */
+  background: white !important; /* 确保是白色背景 */
+}
+:global(.imessage-header) {
+  padding: 10px 15px !important;
+  text-align: center !important;
+  font-size: 12px !important;
+  color: #8e8e93 !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  flex-shrink: 0 !important;
+}
+
+:global(.imessage-content) {
+  flex: 1 !important;
+  padding: 20px 25px !important; /* 增加左右留白 */
+  overflow-y: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  background: #fdfdfd !important; /* 略带一点点灰，增加层次感 */
+}
+
+/* 气泡样式 */
+:global(.bubble-row) {
+  display: flex !important;
+  width: 100% !important;
+}
+:global(.bubble-row.incoming) { justify-content: flex-start !important; }
+:global(.bubble-row.outgoing) { justify-content: flex-end !important; }
+
+:global(.bubble) {
+  max-width: 70% !important;
+  padding: 9px 16px !important; /* 稍微调整气泡大小 */
+  border-radius: 20px !important; /* 更圆润的边角 */
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+  word-wrap: break-word !important; /* 长文本自动换行 */
+}
+
+:global(.incoming .bubble) {
+  background: #e9e9eb !important;
+  color: black !important;
+  border-bottom-left-radius: 4px !important; /* 小尾巴模拟 */
+}
+
+:global(.outgoing .bubble) {
+  background: linear-gradient(180deg, #05d1ff 0%, #007aff 100%) !important;
+  color: white !important;
+  border-bottom-right-radius: 4px !important;
+}
+
+/* 输入框区域 */
+:global(.imessage-input-area) {
+  padding: 15px 20px !important; /* 增加左右留白 */
+  flex-shrink: 0 !important;
+  background: white !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+:global(.input-wrapper) {
+  display: flex !important;
+  align-items: center !important;
+  border: 1px solid #e5e5e5 !important;
+  border-radius: 20px !important;
+  padding: 4px 5px 4px 15px !important; /* 左侧留白多一点 */
+}
+
+:global(.input-wrapper input) {
+  flex: 1 !important;
+  border: none !important;
+  outline: none !important;
+  padding: 5px 0 !important; /* 调整内边距 */
+  font-size: 14px !important;
+}
+
+:global(.input-wrapper button) {
+  background: #007aff !important;
+  color: white !important;
+  border: none !important;
+  width: 28px !important; /* 稍微大一点的按钮 */
+  height: 28px !important;
+  border-radius: 50% !important;
+  cursor: pointer !important;
+  font-size: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-left: 8px !important;
+}
+/* --- 穿透修复：同时解决便签和信息的布局问题 --- */
+:global(.notes-window .window-body),
+:global(.message-window .window-body) {
+  display: block !important; /* 核心：取消 flex，让内部 imessage-container 自由发挥 */
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+/* --- 信息窗口内部容器修复 --- */
+:global(.imessage-container) {
+  display: flex !important; /* 这里再开启 flex 用于左右布局 */
+  width: 100% !important;
+  height: 100% !important;
+  background: white !important;
+}
+
+/* --- 确保聊天主区域撑满剩余空间 --- */
+:global(.imessage-main) {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important; /* 防止内容过长撑破布局 */
+}
+
+/* --- 输入框容器宽度修复 --- */
+:global(.imessage-input-area) {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+/* 1. 顶层结构穿透 (确保三个窗口都横向铺满) */
+:global(.notes-window .window-body),
+:global(.message-window .window-body),
+:global(.music-window .window-body) {
+  display: block !important;
+  padding: 0 !important;
+  overflow: hidden !important; /* 彻底干掉外层冗余滚动条 */
+}
+
+/* 2. 音乐窗口内部主容器 */
+:global(.music-app-container) {
+  display: flex !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: #fff !important;
+}
+
+/* 3. 左侧边栏美化 (精简比例) */
+:global(.music-sidebar) {
+  width: 180px !important;
+  flex-shrink: 0 !important;
+  background: #f6f6f6 !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
+  padding: 20px 10px !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+:global(.sidebar-item) {
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  cursor: pointer !important;
+  color: #1d1d1f !important;
+}
+
+:global(.sidebar-item.active) {
+  background: #fa2d48 !important; /* Apple Music 红 */
+  color: white !important;
+}
+
+/* 4. 右侧播放器核心区 (干掉多余文字和空隙) */
+:global(.music-main) {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: white !important;
+  overflow: hidden !important; /* 关键：防止产生双滚动条 */
+}
+
+/* 5. 播放器容器：彻底铺满 */
+:global(.player-wrapper) {
+  flex: 1 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+}
+
+/* 6. 强制 iframe 撑开并去掉边框 */
+:global(#netease-player) {
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+  display: block !important;
+}
+
+/* 7. 隐藏不需要的占位元素 */
+:global(.player-hint) {
+  display: none !important;
+}
+/* 1. 穿透修复：加入垃圾桶窗口 */
+:global(.notes-window .window-body),
+:global(.message-window .window-body),
+:global(.music-window .window-body),
+:global(.trash-window .window-body) {
+  display: block !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+/* 2. 垃圾桶主容器 */
+:global(.trash-app-container) {
+  width: 100% !important;
+  height: 100% !important;
+  background: white !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* 3. 空状态美化 */
+:global(.trash-empty-state) {
+  text-align: center !important;
+  color: #8e8e93 !important; /* macOS 典型的灰色文字 */
+}
+
+:global(.trash-icon-large) {
+  font-size: 64px !important;
+  margin-bottom: 15px !important;
+  opacity: 0.2 !important; /* 半透明效果，显得更精致 */
+}
+
+:global(.trash-empty-state h2) {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  color: #1d1d1f !important;
+  margin-bottom: 8px !important;
+}
+
+:global(.trash-empty-state p) {
+  font-size: 13px !important;
+}
 </style>
 
 <script is:inline>
-// --- 1. 全局变量 ---
-let windowCount = 0;
-let highestZIndex = 1000;
-const WIN_W = 800;
-const WIN_H = 500;
-const STEP = 30;
-
-let macAlbum = [];
-let macIndex = 0;
-
-// --- 2. 窗口管理 ---
-function bringToFront(el) {
-  if (!el) return;
-  highestZIndex++;
-  el.style.zIndex = highestZIndex;
-}
-
-function openWin(id) {
-  const el = document.getElementById(id);
-  if (!el) {
-    console.warn('Window not found:', id);
-    return;
+  // --- 1. 全局变量 ---
+  let windowCount = 0;
+  let highestZIndex = 1000;
+  const WIN_W = 800;
+  const WIN_H = 500;
+  const STEP = 30;
+  
+  let macAlbum = [];
+  let macIndex = 0;
+  
+  // --- 2. 窗口管理 ---
+  function bringToFront(el) {
+    if (!el) return;
+    highestZIndex++;
+    el.style.zIndex = highestZIndex;
   }
-  const win = el.querySelector('.app-window');
   
-  // Dock 激活状态
-  document.querySelectorAll('.dock-item').forEach(item => {
-    if (item.getAttribute('onclick')?.includes(id)) item.classList.add('active');
-  });
-
-  // 初次打开定位
-  if (el.style.display === 'none' || el.style.display === '') {
-    const screenW = window.innerWidth;
-    const screenH = window.innerHeight;
-    let left = (screenW - WIN_W) / 2;
-    let top = (screenH - WIN_H) / 2 - 40;
-    const offset = (windowCount % 10) * STEP;
-    win.style.left = (left + offset) + 'px';
-    win.style.top = (top + offset) + 'px';
-    win.style.margin = "0"; 
-    el.style.display = 'block';
-    windowCount++;
-  }
-
-  setTimeout(() => {
-    el.classList.add('active'); 
-    win.style.transform = "scale(1)";
-    win.style.opacity = "1";
-  }, 10);
-  
-  bringToFront(el);
-  const dIcon = document.getElementById('d-icon-' + id);
-  if (dIcon) dIcon.remove();
-  updateDockDivider();
-}
-
-function closeWin(id) {
-  const el = document.getElementById(id);
-  const win = el.querySelector('.app-window');
-  win.style.transform = "scale(0.9)";
-  win.style.opacity = "0";
-  
-  document.querySelectorAll('.dock-item').forEach(item => {
-    if (item.getAttribute('onclick')?.includes(id)) item.classList.remove('active');
-  });
-
-  setTimeout(() => {
-    el.classList.remove('active');
-    el.style.display = 'none';
-  }, 300);
-}
-
-function minWin(id, emoji) {
-  const el = document.getElementById(id);
-  const win = el.querySelector('.app-window');
-  win.style.transform = "scale(0.1) translateY(1000px)";
-  win.style.opacity = "0";
-  
-  setTimeout(() => {
-    el.style.display = 'none';
-    if (!document.getElementById('d-icon-' + id)) {
-      const zone = document.getElementById('min-zone');
-      const icon = document.createElement('div');
-      icon.id = 'd-icon-' + id;
-      icon.className = 'dock-item animated-min'; 
-      icon.innerHTML = emoji;
-      icon.onclick = () => openWin(id);
-      zone.appendChild(icon);
-      updateDockDivider();
-    }
-  }, 300);
-}
-
-function toggleFull(btn) {
-  const win = btn.closest('.app-window');
-  win.classList.toggle('is-fullscreen');
-}
-
-function updateDockDivider() {
-  const zone = document.getElementById('min-zone');
-  const divider = document.getElementById('dock-divider');
-  if (divider) divider.style.display = zone.children.length > 0 ? "block" : "none";
-}
-
-// --- 3. 拖拽逻辑 ---
-let dragObj = null;
-let startMouseX, startMouseY, startObjX, startObjY;
-document.addEventListener('mousedown', (e) => {
-  if (e.target.tagName === 'INPUT') return;
-  const handle = e.target.closest('.drag-handle');
-  if (!handle) return;
-  const target = handle.closest('.app-window') || handle.closest('.icon-unit');
-  if (!target || target.classList.contains('is-fullscreen')) return;
-  
-  dragObj = target;
-  dragObj.style.transition = 'none'; 
-  const overlay = dragObj.closest('.window-overlay'); // Window wrapper
-  if (overlay) bringToFront(overlay); // Use bringToFront on wrapper
-  
-  startMouseX = e.clientX;
-  startMouseY = e.clientY;
-  startObjX = dragObj.offsetLeft;
-  startObjY = dragObj.offsetTop;
-  e.preventDefault(); 
-});
-document.addEventListener('mousemove', (e) => {
-  if (!dragObj) return;
-  dragObj.style.left = (startObjX + (e.clientX - startMouseX)) + 'px';
-  dragObj.style.top = (startObjY + (e.clientY - startMouseY)) + 'px';
-  dragObj.style.margin = "0"; 
-});
-document.addEventListener('mouseup', () => {
-  if (dragObj) {
-    if (dragObj.classList.contains('app-window')) {
-      dragObj.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s';
-    }
-    dragObj = null;
-  }
-});
-
-// --- 4. 辅助功能 ---
-// 时钟
-setInterval(() => {
-  const clock = document.getElementById('mac-clock');
-  if (clock) {
-    const now = new Date();
-    clock.innerText = now.toLocaleString('zh-CN', {
-      year:'numeric', month:'short', day:'numeric', weekday:'short', 
-      hour:'2-digit', minute:'2-digit', hour12:false
-    }).replace(/\//g,'年');
-  }
-}, 1000);
-
-// 搜索联动
-document.addEventListener('keydown', function(e) {
-  if (e.target.id === 'google-search-input' && e.key === 'Enter') {
-    const keyword = e.target.value.trim();
-    if (!keyword) return;
-    const finderSearch = document.getElementById('finder-search');
-    if (finderSearch) finderSearch.value = keyword;
-    if (window.filterPosts) window.filterPosts();
-    window.openWin('mac-finder');
-    e.target.value = "";
-  }
-});
-
-// 访达过滤
-let currentCategory = 'all';
-window.filterByCategory = function(cat, el) {
-  currentCategory = cat;
-  document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
-  el.classList.add('active');
-  window.filterPosts();
-};
-
-window.filterPosts = function() {
-  const query = document.getElementById('finder-search')?.value.toLowerCase() || "";
-  const items = document.querySelectorAll('.post-item');
-  items.forEach(item => {
-    const title = item.querySelector('.file-name').innerText.toLowerCase();
-    const category = item.querySelector('.file-category').innerText;
-    const matchCategory = (currentCategory === 'all' || category === currentCategory);
-    const matchSearch = title.includes(query);
-    item.style.display = (matchCategory && matchSearch) ? 'flex' : 'none';
-  });
-};
-
-// --- 5. 相册侧边栏自动生成逻辑 (已修复 ID 获取问题) ---
-(function() {
-  window.initPhotoNavigation = function() {
-    const list = document.getElementById('photos-post-links');
-    if (!list) return;
-
-    // 找到所有摄影类博文窗口内部
-    const postWindows = document.querySelectorAll('.app-window[data-category="摄影"]:not(#mac-photos)');
-    
-    if (postWindows.length === 0) {
-      list.innerHTML = '<div class="sidebar-item" style="opacity:0.5">暂无摄影集</div>';
+  function openWin(id) {
+    const el = document.getElementById(id);
+    if (!el) {
+      console.warn('Window not found:', id);
       return;
     }
-
-    list.innerHTML = Array.from(postWindows).map(win => {
-      const title = win.querySelector('.window-title')?.innerText || "未命名博文";
-      
-      // 【核心修复】：ID 挂在 .app-window 的父级元素上，不在这里
-      // 如果你的 Window 组件是 <div id="slug"><div class="app-window">...</div></div>
-      const winId = win.parentElement ? win.parentElement.id : "";
-      
-      if (!winId) return "";
-
-      // 使用 openWin 触发完整的开窗动画和 Dock 状态
+    const win = el.querySelector('.app-window');
+    
+    document.querySelectorAll('.dock-item').forEach(item => {
+      if (item.getAttribute('onclick')?.includes(id)) item.classList.add('active');
+    });
+  
+    if (el.style.display === 'none' || el.style.display === '') {
+      const screenW = window.innerWidth;
+      const screenH = window.innerHeight;
+      let left = (screenW - WIN_W) / 2;
+      let top = (screenH - WIN_H) / 2 - 40;
+      const offset = (windowCount % 10) * STEP;
+      win.style.left = (left + offset) + 'px';
+      win.style.top = (top + offset) + 'px';
+      win.style.margin = "0"; 
+      el.style.display = 'block';
+      windowCount++;
+    }
+  
+    setTimeout(() => {
+      el.classList.add('active'); 
+      win.style.transform = "scale(1)";
+      win.style.opacity = "1";
+    }, 10);
+    
+    bringToFront(el);
+    const dIcon = document.getElementById('d-icon-' + id);
+    if (dIcon) dIcon.remove();
+    updateDockDivider();
+  }
+  
+  function closeWin(id) {
+    const el = document.getElementById(id);
+    const win = el.querySelector('.app-window');
+    win.style.transform = "scale(0.9)";
+    win.style.opacity = "0";
+    
+    document.querySelectorAll('.dock-item').forEach(item => {
+      if (item.getAttribute('onclick')?.includes(id)) item.classList.remove('active');
+    });
+  
+    setTimeout(() => {
+      el.classList.remove('active');
+      el.style.display = 'none';
+    }, 300);
+  }
+  
+  function minWin(id, emoji) {
+    const el = document.getElementById(id);
+    const win = el.querySelector('.app-window');
+    win.style.transform = "scale(0.1) translateY(1000px)";
+    win.style.opacity = "0";
+    
+    setTimeout(() => {
+      el.style.display = 'none';
+      if (!document.getElementById('d-icon-' + id)) {
+        const zone = document.getElementById('min-zone');
+        const icon = document.createElement('div');
+        icon.id = 'd-icon-' + id;
+        icon.className = 'dock-item animated-min'; 
+        icon.innerHTML = emoji;
+        icon.onclick = () => openWin(id);
+        zone.appendChild(icon);
+        updateDockDivider();
+      }
+    }, 300);
+  }
+  
+  function toggleFull(btn) {
+    const win = btn.closest('.app-window');
+    win.classList.toggle('is-fullscreen');
+  }
+  
+  function updateDockDivider() {
+    const zone = document.getElementById('min-zone');
+    const divider = document.getElementById('dock-divider');
+    if (divider) divider.style.display = zone.children.length > 0 ? "block" : "none";
+  }
+  
+  // --- 3. 拖拽逻辑 ---
+  let dragObj = null;
+  let startMouseX, startMouseY, startObjX, startObjY;
+  document.addEventListener('mousedown', (e) => {
+    if (e.target.tagName === 'INPUT') return;
+    const handle = e.target.closest('.drag-handle');
+    if (!handle) return;
+    const target = handle.closest('.app-window') || handle.closest('.icon-unit');
+    if (!target || target.classList.contains('is-fullscreen')) return;
+    
+    dragObj = target;
+    dragObj.style.transition = 'none'; 
+    const overlay = dragObj.closest('.window-overlay');
+    if (overlay) bringToFront(overlay);
+    
+    startMouseX = e.clientX;
+    startMouseY = e.clientY;
+    startObjX = dragObj.offsetLeft;
+    startObjY = dragObj.offsetTop;
+    e.preventDefault(); 
+  });
+  document.addEventListener('mousemove', (e) => {
+    if (!dragObj) return;
+    dragObj.style.left = (startObjX + (e.clientX - startMouseX)) + 'px';
+    dragObj.style.top = (startObjY + (e.clientY - startMouseY)) + 'px';
+    dragObj.style.margin = "0"; 
+  });
+  document.addEventListener('mouseup', () => {
+    if (dragObj) {
+      if (dragObj.classList.contains('app-window')) {
+        dragObj.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s';
+      }
+      dragObj = null;
+    }
+  });
+  
+  // --- 4. 辅助功能 ---
+  setInterval(() => {
+    const clock = document.getElementById('mac-clock');
+    if (clock) {
+      const now = new Date();
+      clock.innerText = now.toLocaleString('zh-CN', {
+        year:'numeric', month:'short', day:'numeric', weekday:'short', 
+        hour:'2-digit', minute:'2-digit', hour12:false
+      }).replace(/\//g,'年');
+    }
+  }, 1000);
+  
+  document.addEventListener('keydown', function(e) {
+    if (e.target.id === 'google-search-input' && e.key === 'Enter') {
+      const keyword = e.target.value.trim();
+      if (!keyword) return;
+      const finderSearch = document.getElementById('finder-search');
+      if (finderSearch) finderSearch.value = keyword;
+      if (window.filterPosts) window.filterPosts();
+      window.openWin('mac-finder');
+      e.target.value = "";
+    }
+  });
+  
+  let currentCategory = 'all';
+  window.filterByCategory = function(cat, el) {
+    currentCategory = cat;
+    document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+    el.classList.add('active');
+    window.filterPosts();
+  };
+  
+  window.filterPosts = function() {
+    const query = document.getElementById('finder-search')?.value.toLowerCase() || "";
+    const items = document.querySelectorAll('.post-item');
+    items.forEach(item => {
+      const title = item.querySelector('.file-name').innerText.toLowerCase();
+      const category = item.querySelector('.file-category').innerText;
+      const matchCategory = (currentCategory === 'all' || category === currentCategory);
+      const matchSearch = title.includes(query);
+      item.style.display = (matchCategory && matchSearch) ? 'flex' : 'none';
+    });
+  };
+  
+  // --- 6. 图片预览器逻辑 ---
+  document.addEventListener('click', function(e) {
+    const container = e.target.closest('.markdown-body') || e.target.closest('.post-content');
+    if (e.target.tagName === 'IMG' && container) {
+      if (e.target.naturalWidth < 50 && e.target.width < 50) return;
+      const imgs = Array.from(container.querySelectorAll('img'));
+      macAlbum = imgs.map(img => img.src);
+      macIndex = macAlbum.indexOf(e.target.src);
+      openMacViewer();
+    }
+  });
+  
+  function openMacViewer() {
+    const v = document.getElementById('mac-image-viewer');
+    if (!v) return;
+    v.style.zIndex = 100000; 
+    updateMacUI();
+    v.style.display = 'flex';
+    setTimeout(() => v.classList.add('active'), 10);
+    document.addEventListener('keydown', handleMacKeyDown);
+  }
+  
+  function updateMacUI() {
+    const img = document.getElementById('mac-viewer-img');
+    const counter = document.getElementById('mac-viewer-counter');
+    if (img) img.src = macAlbum[macIndex];
+    if (counter) counter.innerText = `${macIndex + 1} / ${macAlbum.length}`;
+  }
+  
+  window.changeMacImage = function(step) {
+    if (macAlbum.length <= 1) return;
+    macIndex = (macIndex + step + macAlbum.length) % macAlbum.length;
+    const img = document.getElementById('mac-viewer-img');
+    img.style.opacity = '0.5';
+    updateMacUI();
+    setTimeout(() => img.style.opacity = '1', 100);
+  };
+  
+  window.closeMacViewer = function() {
+    const v = document.getElementById('mac-image-viewer');
+    if (v) {
+      v.classList.remove('active');
+      setTimeout(() => v.style.display = 'none', 300);
+    }
+    document.removeEventListener('keydown', handleMacKeyDown);
+  };
+  
+  function handleMacKeyDown(e) {
+    const v = document.getElementById('mac-image-viewer');
+    if (v && v.style.display === 'flex') {
+      if (e.key === 'ArrowRight') changeMacImage(1);
+      if (e.key === 'ArrowLeft') changeMacImage(-1);
+      if (e.key === 'Escape') closeMacViewer();
+    }
+  }
+  
+  // 暴露给全局
+  window.openWin = openWin;
+  window.closeWin = closeWin;
+  window.minWin = minWin;
+  window.toggleFull = toggleFull;
+  window.bringToFront = bringToFront;
+  
+  // --- 7. 相册核心补丁 ---
+  function initPhotoSidebar() {
+    const sidebarList = document.getElementById('photos-post-links');
+    if (!sidebarList) return;
+  
+    const photoPosts = Array.from(document.querySelectorAll('.post-item')).filter(item => {
+      return item.querySelector('.file-category')?.innerText === '摄影';
+    });
+  
+    sidebarList.innerHTML = photoPosts.map(post => {
+      const title = post.querySelector('.file-name').innerText;
+      const winId = post.getAttribute('onclick').match(/'([^']+)'/)[1];
       return `
-        <div class="sidebar-item" onclick="openWin('${winId}')">
-          📁 ${title}
+        <div class="sidebar-item" onclick="loadAlbumFromPost('${winId}', '${title}', this)">
+          📸 ${title}
         </div>
       `;
     }).join('');
-  };
-
-  const observer = new MutationObserver(() => {
-    const win = document.getElementById('mac-photos');
-    if (win && win.style.display !== 'none') {
-      window.initPhotoNavigation();
+  
+    // 【优化】：默认加载最新一篇
+    const firstItem = sidebarList.querySelector('.sidebar-item');
+    if (firstItem) {
+      firstItem.click();
     }
-  });
-
-  const photoWin = document.getElementById('mac-photos');
-  if (photoWin) observer.observe(photoWin, { attributes: true });
-})();
-
-// --- 6. 图片预览器逻辑 ---
-document.addEventListener('click', function(e) {
-  const container = e.target.closest('.markdown-body') || e.target.closest('.post-content');
-  if (e.target.tagName === 'IMG' && container) {
-    if (e.target.naturalWidth < 50 && e.target.width < 50) return;
-    const imgs = Array.from(container.querySelectorAll('img'));
-    macAlbum = imgs.map(img => img.src);
-    macIndex = macAlbum.indexOf(e.target.src);
+  }
+  
+  window.loadAlbumFromPost = function(winId, title, el) {
+    document.querySelectorAll('#photos-post-links .sidebar-item').forEach(i => i.classList.remove('active'));
+    if (el) el.classList.add('active');
+  
+    const headerTitle = document.querySelector('.photos-header h2');
+    const headerStats = document.querySelector('.photos-header p');
+    if (headerTitle) headerTitle.innerText = title;
+  
+    const postWin = document.getElementById(winId);
+    const photoGrid = document.querySelector('.photos-grid');
+    
+    if (!postWin || !photoGrid) return;
+  
+    const imgs = Array.from(postWin.querySelectorAll('.image-grid-folder img'));
+  
+    if (imgs.length === 0) {
+      photoGrid.innerHTML = '<div style="grid-column:1/-1; padding:40px; color:#999; text-align:center;">该博文中没有网格图片</div>';
+      if (headerStats) headerStats.innerText = '0 张照片';
+      return;
+    }
+  
+    if (headerStats) headerStats.innerText = `${imgs.length} 张照片`;
+    // 关键：点击卡片调用预览
+    photoGrid.innerHTML = imgs.map((img, idx) => `
+      <div class="photo-card" onclick="openMacViewerFromAlbum('${winId}', ${idx})">
+        <img src="${img.src}" />
+      </div>
+    `).join('');
+  };
+  
+  // 【修复】：相册专用预览函数
+  window.openMacViewerFromAlbum = function(winId, index) {
+    const postWin = document.getElementById(winId);
+    if (!postWin) return;
+    const imgs = Array.from(postWin.querySelectorAll('.image-grid-folder img')).map(i => i.src);
+    
+    macAlbum = imgs;
+    macIndex = index;
     openMacViewer();
-  }
-});
-
-function openMacViewer() {
-  const v = document.getElementById('mac-image-viewer');
-  if (!v) return;
-  v.style.zIndex = 100000; 
-  updateMacUI();
-  v.style.display = 'flex';
-  setTimeout(() => v.classList.add('active'), 10);
-  document.addEventListener('keydown', handleMacKeyDown);
-}
-
-function updateMacUI() {
-  const img = document.getElementById('mac-viewer-img');
-  const counter = document.getElementById('mac-viewer-counter');
-  if (img) img.src = macAlbum[macIndex];
-  if (counter) counter.innerText = `${macIndex + 1} / ${macAlbum.length}`;
-}
-
-window.changeMacImage = function(step) {
-  if (macAlbum.length <= 1) return;
-  macIndex = (macIndex + step + macAlbum.length) % macAlbum.length;
-  const img = document.getElementById('mac-viewer-img');
-  img.style.opacity = '0.5';
-  updateMacUI();
-  setTimeout(() => img.style.opacity = '1', 100);
-};
-
-window.closeMacViewer = function() {
-  const v = document.getElementById('mac-image-viewer');
-  if (v) {
-    v.classList.remove('active');
-    setTimeout(() => v.style.display = 'none', 300);
-  }
-  document.removeEventListener('keydown', handleMacKeyDown);
-};
-
-function handleMacKeyDown(e) {
-  const v = document.getElementById('mac-image-viewer');
-  if (v && v.style.display === 'flex') {
-    if (e.key === 'ArrowRight') changeMacImage(1);
-    if (e.key === 'ArrowLeft') changeMacImage(-1);
-    if (e.key === 'Escape') closeMacViewer();
-  }
-}
-
-// 暴露给全局
-window.openWin = openWin;
-window.closeWin = closeWin;
-window.minWin = minWin;
-window.toggleFull = toggleFull;
-window.bringToFront = bringToFront;
-</script>
+  };
+  
+  document.addEventListener('DOMContentLoaded', initPhotoSidebar);
+  setTimeout(initPhotoSidebar, 1000);
+  </script>
+  <script src="/notes.js" is:inline></script>
+  <script src="/messages.js" is:inline></script>
